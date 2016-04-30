@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  
+  <title>HDFS 的设计 | Hello Spark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
+各个角度看大数据大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
+流式数据访问最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HDFS 的设计">
+<meta property="og:url" content="http://www.hellospark.me/2016/04/30/the-design-of-HDFS/index.html">
+<meta property="og:site_name" content="Hello Spark">
+<meta property="og:description" content="HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
+各个角度看大数据大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
+流式数据访问最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推">
+<meta property="og:updated_time" content="2016-04-30T14:35:15.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HDFS 的设计">
+<meta name="twitter:description" content="HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
+各个角度看大数据大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
+流式数据访问最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推">
+  
+    <link rel="alternative" href="/atom.xml" title="Hello Spark" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+      <link href="//cdn.bootcss.com/animate.css/3.5.0/animate.min.css" rel="stylesheet">
+  
+  
+  
+      <script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+      <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <link href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+  
+      <link href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+  
+  <script src="//cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.9/clipboard.min.js"></script>
+  <script>
+      var yiliaConfig = {
+          fancybox: true,
+          animate: true,
+          isHome: false,
+          isPost: true,
+          isArchive: false,
+          isTag: false,
+          isCategory: false,
+          open_in_new: false,
+          fancybox_js: "//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.min.js",
+          scrollreveal: "//cdn.bootcss.com/scrollReveal.js/3.0.9/scrollreveal.min.js"
+      }
+  </script>
+
+  
+      <script>
+          yiliaConfig.rootUrl = "/";
+      </script>
+  
+
+  
+  
+</head>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="/img/avatar.png" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Lyndon Zhang</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">Lyndon和他的Hadoop小伙伴们</p>
+        
+                
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>Menu</li>
+                        <li>Tags</li>
+                        
+                        <li>Friends</li>
+                        
+                        
+                        <li>About Me</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="/about/">关于我</a></li>
+                        
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:lyndon.zhang@qq.com" title="Email"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HDFS/">HDFS</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">前进吧,大数据</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Lyndon Zhang</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="/img/avatar.png" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Lyndon Zhang</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">Lyndon和他的Hadoop小伙伴们</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                    <li><a href="/about/">关于我</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="mailto:lyndon.zhang@qq.com" title="Email"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="Tags" friends="Friends" about="About Me"/>
+</nav>
+      <div class="body-wrap"><article id="post-the-design-of-HDFS" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/04/30/the-design-of-HDFS/" class="article-date">
+      <time datetime="2016-04-30T14:07:56.000Z" itemprop="datePublished">2016-04-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      HDFS 的设计
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HDFS/">HDFS</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <p>HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. </p>
+<h2 id="各个角度看大数据"><a href="#各个角度看大数据" class="headerlink" title="各个角度看大数据"></a>各个角度看大数据</h2><h3 id="大数据"><a href="#大数据" class="headerlink" title="大数据"></a>大数据</h3><p>多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.</p>
+<h3 id="流式数据访问"><a href="#流式数据访问" class="headerlink" title="流式数据访问"></a>流式数据访问</h3><p>最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推移,会用着这些数据做很多数据分析.  每次分析基本都会去读这个数据集的大部分内容.  所有读取所有内容得效率的优先级要高于随机读取一小块数据的效率.</p>
+<h3 id="消费级硬件"><a href="#消费级硬件" class="headerlink" title="消费级硬件"></a>消费级硬件</h3><p>Hadoop 不需要很贵的,高可用的硬件.  它运行在廉价集群上,这些硬件可以来自不同的品牌. 这样的集群中单点故障的频率很高. HDFS的设计可用在不让用户知晓的单点故障的情况下无间断的工作.</p>
+<h3 id="低延时的数据访问"><a href="#低延时的数据访问" class="headerlink" title="低延时的数据访问"></a>低延时的数据访问</h3><p>需要低延时访问数据的程序(比如,10毫秒级别)不太适合使用HDFS.  HDFS为高吞吐量做了优化,这意味着会导致很高的延迟.  HBase可能更加适用于低延迟的程序.</p>
+<h3 id="大量的小文件"><a href="#大量的小文件" class="headerlink" title="大量的小文件"></a>大量的小文件</h3><p>TODO</p>
+<h3 id="多次写入-随意文件更改"><a href="#多次写入-随意文件更改" class="headerlink" title="多次写入,随意文件更改"></a>多次写入,随意文件更改</h3><p>TODO</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>Title:</span><a href="/2016/04/30/the-design-of-HDFS/">HDFS 的设计</a></p>
+        <p><span>Author:</span><a href="/" title="Back to Homepage">Lyndon Zhang</a></p>
+        <p><span>Created:</span>2016-04-30, 22:07:56</p>
+        <p><span>Updated:</span>2016-04-30, 22:35:15</p>
+        <p>
+            <span>Full URL:</span><a class="post-url" href="/2016/04/30/the-design-of-HDFS/" title="HDFS 的设计">http://www.hellospark.me/2016/04/30/the-design-of-HDFS/</a>
+            <span class="copy-path" data-clipboard-text="From http://www.hellospark.me/2016/04/30/the-design-of-HDFS/　　By Lyndon Zhang" title="Copy Article&#39;s Link &amp; Author"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>License:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"CC BY-NC-SA 4.0"</a> Keep Link &amp; Author if Distribute.
+        </p>
+    </div>
+
+
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#各个角度看大数据"><span class="toc-number">1.</span> <span class="toc-text">各个角度看大数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#大数据"><span class="toc-number">1.1.</span> <span class="toc-text">大数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#流式数据访问"><span class="toc-number">1.2.</span> <span class="toc-text">流式数据访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#消费级硬件"><span class="toc-number">1.3.</span> <span class="toc-text">消费级硬件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#低延时的数据访问"><span class="toc-number">1.4.</span> <span class="toc-text">低延时的数据访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#大量的小文件"><span class="toc-number">1.5.</span> <span class="toc-text">大量的小文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多次写入-随意文件更改"><span class="toc-number">1.6.</span> <span class="toc-text">多次写入,随意文件更改</span></a></li></ol></li></ol>
+</div>
+<style>
+    .left-col .switch-btn {
+        display: none;
+    }
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="Hide"  title="Show or Hide Table of Contents">
+<script>
+    var valueHide = "Hide";
+    var valueShow = "Show";
+
+    if ($(".left-col").is(":hidden")) {
+        $("#tocButton").attr("value", valueShow);
+    }
+
+    $("#tocButton").click(function() {
+        if ($("#toc").is(":hidden")) {
+            $("#tocButton").attr("value", valueHide);
+            $("#toc").slideDown(320);
+            $(".switch-btn, .switch-area").fadeOut(300);
+        }
+        else {
+            $("#tocButton").attr("value", valueShow);
+            $("#toc").slideUp(350);
+            $(".switch-btn, .switch-area").fadeIn(500);
+        }
+    })
+
+    if ($(".toc").length < 1) {
+        $("#toc, #tocButton").hide();
+        $(".switch-btn, .switch-area").show();
+    }
+</script>
+
+
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"HDFS 的设计　| Hello Spark　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+        <section id="comments">
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'null'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</section>
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="Back to Homepage"><i class="fa fa-home"></i></a>
+        
+
+        <a title="Mini Archives"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/" title="Back to Homepage"><i class="fa fa-home"></i></a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/04/30/the-design-of-HDFS/">HDFS 的设计</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016 Lyndon Zhang
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="A fast, simple &amp; powerful blog framework">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="Another simple and elegant theme for Hexo">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style='display:none'>
+                        <span id="site-visit" >Site Visitors: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style='display:none'>
+                        <span id="page-visit">Page Hits: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//cdn.bootcss.com/require.js/2.1.22/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="Back to Top"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" title="Comments"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="Go to Bottom"><i class="fa fa-arrow-down"></i></a>
+</div>
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
