@@ -5,22 +5,22 @@
   
   <title>HDFS 的设计 | Hello Spark</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
-各个角度看大数据大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
-流式数据访问最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推">
+  <meta name="description" content="HDFS是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
+各个角度看HDFS大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
+流式数据访问最有效的数据访问模式是:一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是被生成后后随着时间的推移会被用来做很多次数据分析.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="HDFS 的设计">
 <meta property="og:url" content="http://www.hellospark.me/2016/04/30/the-design-of-HDFS/index.html">
 <meta property="og:site_name" content="Hello Spark">
-<meta property="og:description" content="HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
-各个角度看大数据大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
-流式数据访问最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推">
-<meta property="og:updated_time" content="2016-04-30T14:35:15.000Z">
+<meta property="og:description" content="HDFS是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
+各个角度看HDFS大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
+流式数据访问最有效的数据访问模式是:一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是被生成后后随着时间的推移会被用来做很多次数据分析.">
+<meta property="og:updated_time" content="2016-05-01T16:39:01.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HDFS 的设计">
-<meta name="twitter:description" content="HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
-各个角度看大数据大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
-流式数据访问最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推">
+<meta name="twitter:description" content="HDFS是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. 
+各个角度看HDFS大数据多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.
+流式数据访问最有效的数据访问模式是:一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是被生成后后随着时间的推移会被用来做很多次数据分析.">
   
     <link rel="alternative" href="/atom.xml" title="Hello Spark" type="application/atom+xml">
   
@@ -265,13 +265,13 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <p>HDFS 是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. </p>
-<h2 id="各个角度看大数据"><a href="#各个角度看大数据" class="headerlink" title="各个角度看大数据"></a>各个角度看大数据</h2><h3 id="大数据"><a href="#大数据" class="headerlink" title="大数据"></a>大数据</h3><p>多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.</p>
-<h3 id="流式数据访问"><a href="#流式数据访问" class="headerlink" title="流式数据访问"></a>流式数据访问</h3><p>最有效的数据访问模式是, 一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是从别的地方拷贝来的或者生产的, 然后随着时间的推移,会用着这些数据做很多数据分析.  每次分析基本都会去读这个数据集的大部分内容.  所有读取所有内容得效率的优先级要高于随机读取一小块数据的效率.</p>
-<h3 id="消费级硬件"><a href="#消费级硬件" class="headerlink" title="消费级硬件"></a>消费级硬件</h3><p>Hadoop 不需要很贵的,高可用的硬件.  它运行在廉价集群上,这些硬件可以来自不同的品牌. 这样的集群中单点故障的频率很高. HDFS的设计可用在不让用户知晓的单点故障的情况下无间断的工作.</p>
-<h3 id="低延时的数据访问"><a href="#低延时的数据访问" class="headerlink" title="低延时的数据访问"></a>低延时的数据访问</h3><p>需要低延时访问数据的程序(比如,10毫秒级别)不太适合使用HDFS.  HDFS为高吞吐量做了优化,这意味着会导致很高的延迟.  HBase可能更加适用于低延迟的程序.</p>
-<h3 id="大量的小文件"><a href="#大量的小文件" class="headerlink" title="大量的小文件"></a>大量的小文件</h3><p>TODO</p>
-<h3 id="多次写入-随意文件更改"><a href="#多次写入-随意文件更改" class="headerlink" title="多次写入,随意文件更改"></a>多次写入,随意文件更改</h3><p>TODO</p>
+        <p>HDFS是被设计用来存储大数据的文件系统.  它采用流式数据访问模式,运行在消费级硬件集群上. </p>
+<h2 id="各个角度看HDFS"><a href="#各个角度看HDFS" class="headerlink" title="各个角度看HDFS"></a>各个角度看HDFS</h2><h3 id="大数据"><a href="#大数据" class="headerlink" title="大数据"></a>大数据</h3><p>多大才算大数据? 一般而言是指GB/TB级别的数据,几百兆也勉强算.  有很多hadoop集群运行着PB级别的数据.</p>
+<h3 id="流式数据访问"><a href="#流式数据访问" class="headerlink" title="流式数据访问"></a>流式数据访问</h3><p>最有效的数据访问模式是:一次写入,多次读取.  HDFS就是建立在这样一个点子上.  一个数据集是被生成后后随着时间的推移会被用来做很多次数据分析.  每次分析基本都会去读这个数据集的大部分内容.  <strong>所以一次读取大量数据的效率要优先于一次读取第一小块数据的效率.</strong></p>
+<h3 id="消费级硬件"><a href="#消费级硬件" class="headerlink" title="消费级硬件"></a>消费级硬件</h3><p>Hadoop不需要很贵的,高可用的硬件. 它运行在廉价集群上,这些硬件可以来自不同的品牌. 这样的集群中单点故障的发生频率很高. <strong>HDFS的设计使得在用户不知晓硬件故障的情况下能够不中断的工作.</strong></p>
+<h3 id="低延时的数据访问"><a href="#低延时的数据访问" class="headerlink" title="低延时的数据访问"></a>低延时的数据访问</h3><p>需要低延时访问数据的程序(比如,&gt;10毫秒级别)不太适合使用HDFS.  HDFS为高吞吐量做了优化,这意味着会导致很高的延迟.  HBase可能更加适用于低延迟的程序.</p>
+<h3 id="大量的小文件"><a href="#大量的小文件" class="headerlink" title="大量的小文件"></a>大量的小文件</h3><p>因为namenode把文件系统的metadata保存在memory里面, 一个HDFS的文件数量限制受制于namenode的memory有多大. 每一个文件,目录,block 都会占用150B内存. 100万个单block的文件大约需要300M内存. 所以存储百万级的文件是可行的的.  亿级别的文件数量超出了目前硬件的极限.</p>
+<h3 id="多次写入-随意文件更改"><a href="#多次写入-随意文件更改" class="headerlink" title="多次写入,随意文件更改"></a>多次写入,随意文件更改</h3><p>HDFS里面的文件都会只有一个写入者.  写操作用用都是在文件的末尾, 也就是append-only fashion. 目前HDFS不支持并发写入以及更改操作.(将来有可能会支持)</p>
 
       
     </div>
@@ -283,7 +283,7 @@
         <p><span>本文标题:</span><a href="/2016/04/30/the-design-of-HDFS/">HDFS 的设计</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Lyndon Zhang</a></p>
         <p><span>发布时间:</span>2016-04-30, 22:07:56</p>
-        <p><span>最后更新:</span>2016-04-30, 22:35:15</p>
+        <p><span>最后更新:</span>2016-05-02, 00:39:01</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/04/30/the-design-of-HDFS/" title="HDFS 的设计">http://www.hellospark.me/2016/04/30/the-design-of-HDFS/</a>
             <span class="copy-path" data-clipboard-text="原文: http://www.hellospark.me/2016/04/30/the-design-of-HDFS/　　作者: Lyndon Zhang" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -301,7 +301,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#各个角度看大数据"><span class="toc-number">1.</span> <span class="toc-text">各个角度看大数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#大数据"><span class="toc-number">1.1.</span> <span class="toc-text">大数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#流式数据访问"><span class="toc-number">1.2.</span> <span class="toc-text">流式数据访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#消费级硬件"><span class="toc-number">1.3.</span> <span class="toc-text">消费级硬件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#低延时的数据访问"><span class="toc-number">1.4.</span> <span class="toc-text">低延时的数据访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#大量的小文件"><span class="toc-number">1.5.</span> <span class="toc-text">大量的小文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多次写入-随意文件更改"><span class="toc-number">1.6.</span> <span class="toc-text">多次写入,随意文件更改</span></a></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#各个角度看HDFS"><span class="toc-number">1.</span> <span class="toc-text">各个角度看HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#大数据"><span class="toc-number">1.1.</span> <span class="toc-text">大数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#流式数据访问"><span class="toc-number">1.2.</span> <span class="toc-text">流式数据访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#消费级硬件"><span class="toc-number">1.3.</span> <span class="toc-text">消费级硬件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#低延时的数据访问"><span class="toc-number">1.4.</span> <span class="toc-text">低延时的数据访问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#大量的小文件"><span class="toc-number">1.5.</span> <span class="toc-text">大量的小文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多次写入-随意文件更改"><span class="toc-number">1.6.</span> <span class="toc-text">多次写入,随意文件更改</span></a></li></ol></li></ol>
 </div>
 <style>
     .left-col .switch-btn {
