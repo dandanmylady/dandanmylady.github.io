@@ -13,9 +13,8 @@ Block Federation
 HDFS Hight Availability
 Failover and Fencing
 
-BlocksTodo
-NameNodeTodo
-DataNodeTodo">
+Blocks基于单块磁盘的文件系统都有一个block size的概念. 每次读写的最小单位就是一个block. 一般情况下是512B.
+HDFS">
 <meta property="og:type" content="article">
 <meta property="og:title" content="HDFS Concepts -- Blocks, NameNode, DataNode">
 <meta property="og:url" content="http://www.hellospark.me/2016/05/02/HDFS-Concepts-Blocks-NN-DN/index.html">
@@ -28,10 +27,9 @@ Block Federation
 HDFS Hight Availability
 Failover and Fencing
 
-BlocksTodo
-NameNodeTodo
-DataNodeTodo">
-<meta property="og:updated_time" content="2016-05-01T17:00:19.000Z">
+Blocks基于单块磁盘的文件系统都有一个block size的概念. 每次读写的最小单位就是一个block. 一般情况下是512B.
+HDFS">
+<meta property="og:updated_time" content="2016-05-02T13:53:13.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HDFS Concepts -- Blocks, NameNode, DataNode">
 <meta name="twitter:description" content="本篇讲下HDFS以下基本概念的前两项:
@@ -42,9 +40,8 @@ Block Federation
 HDFS Hight Availability
 Failover and Fencing
 
-BlocksTodo
-NameNodeTodo
-DataNodeTodo">
+Blocks基于单块磁盘的文件系统都有一个block size的概念. 每次读写的最小单位就是一个block. 一般情况下是512B.
+HDFS">
   
     <link rel="alternative" href="/atom.xml" title="Spark及Hadoop家族其他成员随笔" type="application/atom+xml">
   
@@ -297,7 +294,16 @@ DataNodeTodo">
 <li>HDFS Hight Availability</li>
 <li>Failover and Fencing</li>
 </ul>
-<h2 id="Blocks"><a href="#Blocks" class="headerlink" title="Blocks"></a>Blocks</h2><p>Todo</p>
+<h2 id="Blocks"><a href="#Blocks" class="headerlink" title="Blocks"></a>Blocks</h2><p>基于单块磁盘的文件系统都有一个block size的概念. 每次读写的最小单位就是一个block. 一般情况下是512B.</p>
+<p>HDFS也有一个block的概念, 但是它大多了(bigger than bigger). HDFS一个block的大小是128M. 但是不像普通的文件系统那样,小于一个block大小的文件也会占用一个block. </p>
+<p><strong>Block大小为128MB的HDFS上面存储一个1MB大小的文件只会使用IMB磁盘空间,而不是128MB</strong></p>
+<p>为什么HDFS的一个block要这么大?! 为了减少寻址(seek)的带价. 如果block够大,那么花在寻找block上的时间和传输真正数据的时间相比就可以忽略不计. </p>
+<p>Block abstraction带来的好处:</p>
+<ul>
+<li>文件的大小可以远远超过某个单一磁盘的大小. 属于一个文件的所有blocks分散在不同磁盘的磁盘上,以提高集群的利用率.</li>
+<li>使用Block还是file作为文件存储的单位可以简化HDFS的设计. Block的大小是固定的,没有metadata.</li>
+<li>block replication很好的解决了容灾和高可用性. 每个block都会在不同的节点上存几个replica. 典型的情况是存3份replicas. 如果一个block不可用了, 其他block replicas可以继续服务客户端的读请求. 这对于客户端是透明的. 如果一个block彻底损坏了或者节点出错了,HDFS会自动在别的节点重新生成一个replica,来保证replica一直都是3份.</li>
+</ul>
 <h2 id="NameNode"><a href="#NameNode" class="headerlink" title="NameNode"></a>NameNode</h2><p>Todo</p>
 <h2 id="DataNode"><a href="#DataNode" class="headerlink" title="DataNode"></a>DataNode</h2><p>Todo</p>
 
@@ -311,7 +317,7 @@ DataNodeTodo">
         <p><span>本文标题:</span><a href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/">HDFS Concepts -- Blocks, NameNode, DataNode</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Lyndon Zhang</a></p>
         <p><span>发布时间:</span>2016-05-02, 00:50:01</p>
-        <p><span>最后更新:</span>2016-05-02, 01:00:19</p>
+        <p><span>最后更新:</span>2016-05-02, 21:53:13</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/" title="HDFS Concepts -- Blocks, NameNode, DataNode">http://www.hellospark.me/2016/05/02/HDFS-Concepts-Blocks-NN-DN/</a>
             <span class="copy-path" data-clipboard-text="原文: http://www.hellospark.me/2016/05/02/HDFS-Concepts-Blocks-NN-DN/　　作者: Lyndon Zhang" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>

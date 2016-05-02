@@ -266,7 +266,16 @@
 <li>HDFS Hight Availability</li>
 <li>Failover and Fencing</li>
 </ul>
-<h2 id="Blocks"><a href="#Blocks" class="headerlink" title="Blocks"></a>Blocks</h2><p>Todo</p>
+<h2 id="Blocks"><a href="#Blocks" class="headerlink" title="Blocks"></a>Blocks</h2><p>基于单块磁盘的文件系统都有一个block size的概念. 每次读写的最小单位就是一个block. 一般情况下是512B.</p>
+<p>HDFS也有一个block的概念, 但是它大多了(bigger than bigger). HDFS一个block的大小是128M. 但是不像普通的文件系统那样,小于一个block大小的文件也会占用一个block. </p>
+<p><strong>Block大小为128MB的HDFS上面存储一个1MB大小的文件只会使用IMB磁盘空间,而不是128MB</strong></p>
+<p>为什么HDFS的一个block要这么大?! 为了减少寻址(seek)的带价. 如果block够大,那么花在寻找block上的时间和传输真正数据的时间相比就可以忽略不计. </p>
+<p>Block abstraction带来的好处:</p>
+<ul>
+<li>文件的大小可以远远超过某个单一磁盘的大小. 属于一个文件的所有blocks分散在不同磁盘的磁盘上,以提高集群的利用率.</li>
+<li>使用Block还是file作为文件存储的单位可以简化HDFS的设计. Block的大小是固定的,没有metadata.</li>
+<li>block replication很好的解决了容灾和高可用性. 每个block都会在不同的节点上存几个replica. 典型的情况是存3份replicas. 如果一个block不可用了, 其他block replicas可以继续服务客户端的读请求. 这对于客户端是透明的. 如果一个block彻底损坏了或者节点出错了,HDFS会自动在别的节点重新生成一个replica,来保证replica一直都是3份.</li>
+</ul>
 <h2 id="NameNode"><a href="#NameNode" class="headerlink" title="NameNode"></a>NameNode</h2><p>Todo</p>
 <h2 id="DataNode"><a href="#DataNode" class="headerlink" title="DataNode"></a>DataNode</h2><p>Todo</p>
 
