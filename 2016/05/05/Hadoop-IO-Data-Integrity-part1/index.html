@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Archives: 2016 | Spark及Hadoop家族其他成员随笔</title>
+  <title>Hadoop IO - Data Integrity- part1 | Spark及Hadoop家族其他成员随笔</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Spark及Hadoop家族其他成员随笔">
-<meta property="og:url" content="http://www.hellospark.me/archives/2016/index.html">
+  <meta name="description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop IO - Data Integrity- part1">
+<meta property="og:url" content="http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/index.html">
 <meta property="og:site_name" content="Spark及Hadoop家族其他成员随笔">
-<meta property="og:description">
+<meta property="og:description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
+<meta property="og:updated_time" content="2016-05-04T22:48:54.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Spark及Hadoop家族其他成员随笔">
-<meta name="twitter:description">
+<meta name="twitter:title" content="Hadoop IO - Data Integrity- part1">
+<meta name="twitter:description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
   
     <link rel="alternative" href="/atom.xml" title="Spark及Hadoop家族其他成员随笔" type="application/atom+xml">
   
@@ -43,8 +44,8 @@
           fancybox: true,
           animate: true,
           isHome: false,
-          isPost: false,
-          isArchive: true,
+          isPost: true,
+          isArchive: false,
           isTag: false,
           isCategory: false,
           open_in_new: false,
@@ -220,116 +221,192 @@
     </div>
     <link class="menu-list" tags="Tags" friends="Friends" about="About Me"/>
 </nav>
-      <div class="body-wrap">
+      <div class="body-wrap"><article id="post-Hadoop-IO-Data-Integrity-part1" class="article article-type-post" itemscope itemprop="blogPost">
   
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2016" class="archive-year">2016</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-          <div class="article-meta">
-              <a href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" class="archive-article-date">
-      <time datetime="2016-05-04T22:47:38.000Z" itemprop="datePublished">05-05</time>
+    <div class="article-meta">
+      <a href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" class="article-date">
+      <time datetime="2016-05-04T22:47:38.000Z" itemprop="datePublished">2016-05-05</time>
 </a>
-        </div>
-         
+    </div>
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/">Hadoop IO - Data Integrity- part1</a>
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hadoop IO - Data Integrity- part1
     </h1>
   
 
-        <div class="article-info info-on-archive">
-          
+      </header>
+      
+      <div class="article-info article-info-post">
+        
 
-          
+        
     <div class="article-tag tagcloud">
         <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hadoop-HDFS/">Hadoop HDFS</a></li></ul>
     </div>
 
-        </div>
         <div class="clearfix"></div>
-    </header>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="Data-integrity"><a href="#Data-integrity" class="headerlink" title="Data integrity"></a>Data integrity</h2><p>Because every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing through the system are as large as the ones Hadoop is capable of handling, the chance of data corruption occurring is high.</p>
+<p>The usual way of detecting corrupted data is by computing a checksum for the data when it first enters the system. </p>
+<p>CRC-32 is used for checksumming in Hadoop’s ChecksumFileSystem, while HDFS uses a more efficient variant called CRC-32C.</p>
+<h3 id="Data-integrity-in-HDFS"><a href="#Data-integrity-in-HDFS" class="headerlink" title="Data integrity in HDFS"></a>Data integrity in HDFS</h3><p>A separate checksum is created for every dfs.bytes-per-checksum bytes of data. The default is 512 bytes, and because a CRC-32C checksum is 4 bytes long, the storage overhead is less than 1%.</p>
+<h4 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h4><p>Datanodes are responsible for verifying the data they receive before storing the data and its checksum. </p>
+<p>A client writing data sends it to a pipeline of datanodes and the last datanode in the pipeline verifies the checksum. If the datanode detects an error, the client receives a subclass of IOException, which it should handle in an application-specific manner (for example, by retrying the operation).</p>
+<h4 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h4><p>When clients read data from datanodes, they verify checksums as well, comparing them with the ones stored at the datanodes. Each datanode keeps a persistent log of checksum verifications, so it knows the last time each of its blocks was verified. When a client successfully verifies a block, it tells the datanode, which updates its log. Keeping statistics such as these is valuable in detecting bad disks.</p>
+<h4 id="Checksum-log"><a href="#Checksum-log" class="headerlink" title="Checksum log"></a>Checksum log</h4><p>Each datanode runs a DataBlockScanner in a background thread that periodically verifies all the blocks stored on the datanode.</p>
+<h4 id="Heal"><a href="#Heal" class="headerlink" title="Heal"></a>Heal</h4><p>It can “heal” corrupted blocks by copying one of the good replicas to produce a new, uncorrupt replica.</p>
+<p>If a client detects an error when reading a block, it reports the bad block and the datanode it was trying to read from to the namenode before throwing a ChecksumException. The namenode marks the block replica as corrupt so it doesn’t direct any more clients  to it or try to copy this replica to another datanode.</p>
+<h4 id="disable-checksum"><a href="#disable-checksum" class="headerlink" title="disable checksum"></a>disable checksum</h4><p>Disable verification of checksums by passing false to the setVerifyChecksum() method on FileSystem before using the open() method to read a file. The same effect is possible from the shell by using the -ignoreCrc option with the -get or the equivalent -copyToLocal command.</p>
+
+      
+    </div>
+    
   </div>
-</article>
   
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-          <div class="article-meta">
-              <a href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/" class="archive-article-date">
-      <time datetime="2016-05-01T16:50:01.000Z" itemprop="datePublished">05-02</time>
-</a>
-        </div>
-         
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/">HDFS Concepts -- Blocks, NameNode, DataNode</a>
-    </h1>
-  
-
-        <div class="article-info info-on-archive">
-          
-
-          
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HDFS/">HDFS</a></li></ul>
+    <div class="copyright">
+        <p><span>Title:</span><a href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/">Hadoop IO - Data Integrity- part1</a></p>
+        <p><span>Author:</span><a href="/" title="Back to Homepage">Lyndon Zhang</a></p>
+        <p><span>Created:</span>2016-05-05, 06:47:38</p>
+        <p><span>Updated:</span>2016-05-05, 06:48:54</p>
+        <p>
+            <span>Full URL:</span><a class="post-url" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" title="Hadoop IO - Data Integrity- part1">http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/</a>
+            <span class="copy-path" data-clipboard-text="From http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/　　By Lyndon Zhang" title="Copy Article&#39;s Link &amp; Author"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>License:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"CC BY-NC-SA 4.0"</a> Keep Link &amp; Author if Distribute.
+        </p>
     </div>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/">
+                    HDFS Concepts -- Blocks, NameNode, DataNode
+                </a>
+            </div>
+        
+    </nav>
+
+  
 </article>
-  
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">Contents</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-integrity"><span class="toc-number">1.</span> <span class="toc-text">Data integrity</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-integrity-in-HDFS"><span class="toc-number">1.1.</span> <span class="toc-text">Data integrity in HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Write"><span class="toc-number">1.1.1.</span> <span class="toc-text">Write</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Read"><span class="toc-number">1.1.2.</span> <span class="toc-text">Read</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Checksum-log"><span class="toc-number">1.1.3.</span> <span class="toc-text">Checksum log</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Heal"><span class="toc-number">1.1.4.</span> <span class="toc-text">Heal</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#disable-checksum"><span class="toc-number">1.1.5.</span> <span class="toc-text">disable checksum</span></a></li></ol></li></ol></li></ol>
+</div>
+<style>
+    .left-col .switch-btn {
+        display: none;
+    }
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="Hide"  title="Show or Hide Table of Contents">
+<script>
+    var valueHide = "Hide";
+    var valueShow = "Show";
+
+    if ($(".left-col").is(":hidden")) {
+        $("#tocButton").attr("value", valueShow);
+    }
+
+    $("#tocButton").click(function() {
+        if ($("#toc").is(":hidden")) {
+            $("#tocButton").attr("value", valueHide);
+            $("#toc").slideDown(320);
+            $(".switch-btn, .switch-area").fadeOut(300);
+        }
+        else {
+            $("#tocButton").attr("value", valueShow);
+            $("#toc").slideUp(350);
+            $(".switch-btn, .switch-area").fadeIn(500);
+        }
+    })
+
+    if ($(".toc").length < 1) {
+        $("#toc, #tocButton").hide();
+        $(".switch-btn, .switch-area").show();
+    }
+</script>
+
+
+
+
+
     
+<div class="share">
     
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-          <div class="article-meta">
-              <a href="/2016/04/30/the-design-of-HDFS/" class="archive-article-date">
-      <time datetime="2016-04-30T14:07:56.000Z" itemprop="datePublished">04-30</time>
-</a>
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></i></a>
         </div>
-         
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2016/04/30/the-design-of-HDFS/">HDFS 的设计</a>
-    </h1>
-  
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Hadoop IO - Data Integrity- part1　| Spark及Hadoop家族其他成员随笔　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
 
-        <div class="article-info info-on-archive">
-          
+    
+</div>
 
-          
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HDFS/">HDFS</a></li></ul>
+
+
+
+
+
+
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="Back to Homepage"><i class="fa fa-home"></i></a>
+        
+
+        <a title="Mini Archives"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/" title="Next: HDFS Concepts -- Blocks, NameNode, DataNode">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
     </div>
 
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/">Hadoop IO - Data Integrity- part1</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/">HDFS Concepts -- Blocks, NameNode, DataNode</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/04/30/the-design-of-HDFS/">HDFS 的设计</a></li></ul>
 
-    
 
+
+
+    <script>
+        
+    </script>
 </div>
       <footer id="footer">
     <div class="outer">
