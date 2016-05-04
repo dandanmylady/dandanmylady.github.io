@@ -11,7 +11,7 @@
 <meta property="og:url" content="http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/index.html">
 <meta property="og:site_name" content="Spark及Hadoop家族其他成员随笔">
 <meta property="og:description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
-<meta property="og:updated_time" content="2016-05-04T23:00:07.000Z">
+<meta property="og:updated_time" content="2016-05-04T23:05:16.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hadoop IO - Data Integrity- part1">
 <meta name="twitter:description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
@@ -265,11 +265,11 @@
 <h2 id="Data-integrity-in-HDFS"><a href="#Data-integrity-in-HDFS" class="headerlink" title="Data integrity in HDFS"></a>Data integrity in HDFS</h2><p>A separate checksum is created for every dfs.bytes-per-checksum bytes of data. The default is 512 bytes, and because a CRC-32C checksum is 4 bytes long, the storage overhead is less than 1%.</p>
 <h3 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h3><p>Datanodes are responsible for verifying the data they receive before storing the data and its checksum. </p>
 <p>A client writing data sends it to a pipeline of datanodes and the last datanode in the pipeline verifies the checksum. If the datanode detects an error, the client receives a subclass of IOException, which it should handle in an application-specific manner (for example, by retrying the operation).</p>
-<h3 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h3><p>When clients read data from datanodes, they verify checksums as well, comparing them with the ones stored at the datanodes. Each datanode keeps a persistent log of checksum verifications, so it knows the last time each of its blocks was verified. When a client successfully verifies a block, it tells the datanode, which updates its log. Keeping statistics such as these is valuable in detecting bad disks.</p>
-<h3 id="Checksum-log"><a href="#Checksum-log" class="headerlink" title="Checksum log"></a>Checksum log</h3><p>Each datanode runs a DataBlockScanner in a background thread that periodically verifies all the blocks stored on the datanode.</p>
+<h3 id="Read-and-Checksum-log"><a href="#Read-and-Checksum-log" class="headerlink" title="Read and Checksum log"></a>Read and Checksum log</h3><p>When clients read data from datanodes, they verify checksums as well, comparing them with the ones stored at the datanodes. Each datanode keeps a persistent log of checksum verifications, so it knows the last time each of its blocks was verified. When a client successfully verifies a block, it tells the datanode, which updates its log. Keeping statistics such as these is valuable in detecting bad disks.</p>
+<h3 id="DataBlockScanner"><a href="#DataBlockScanner" class="headerlink" title="DataBlockScanner"></a>DataBlockScanner</h3><p>Each datanode runs a DataBlockScanner in a background thread that periodically verifies all the blocks stored on the datanode.</p>
 <h3 id="Heal"><a href="#Heal" class="headerlink" title="Heal"></a>Heal</h3><p>It can “heal” corrupted blocks by copying one of the good replicas to produce a new, uncorrupt replica.</p>
 <p>If a client detects an error when reading a block, it reports the bad block and the datanode it was trying to read from to the namenode before throwing a ChecksumException. The namenode marks the block replica as corrupt so it doesn’t direct any more clients  to it or try to copy this replica to another datanode.</p>
-<h3 id="disable-checksum"><a href="#disable-checksum" class="headerlink" title="disable checksum"></a>disable checksum</h3><p>Disable verification of checksums by passing false to the setVerifyChecksum() method on FileSystem before using the open() method to read a file. The same effect is possible from the shell by using the -ignoreCrc option with the -get or the equivalent -copyToLocal command.</p>
+<h3 id="Disable-checksum"><a href="#Disable-checksum" class="headerlink" title="Disable checksum"></a>Disable checksum</h3><p>Disable verification of checksums by passing false to the setVerifyChecksum() method on FileSystem before using the open() method to read a file. The same effect is possible from the shell by using the -ignoreCrc option with the -get or the equivalent -copyToLocal command.</p>
 
       
     </div>
@@ -281,7 +281,7 @@
         <p><span>本文标题:</span><a href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/">Hadoop IO - Data Integrity- part1</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Lyndon Zhang</a></p>
         <p><span>发布时间:</span>2016-05-05, 06:47:38</p>
-        <p><span>最后更新:</span>2016-05-05, 07:00:07</p>
+        <p><span>最后更新:</span>2016-05-05, 07:05:16</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" title="Hadoop IO - Data Integrity- part1">http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/</a>
             <span class="copy-path" data-clipboard-text="原文: http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/　　作者: Lyndon Zhang" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -310,7 +310,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Data-integrity"><span class="toc-number">1.</span> <span class="toc-text">Data integrity</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-integrity-in-HDFS"><span class="toc-number">1.1.</span> <span class="toc-text">Data integrity in HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Write"><span class="toc-number">1.1.1.</span> <span class="toc-text">Write</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Read"><span class="toc-number">1.1.2.</span> <span class="toc-text">Read</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Checksum-log"><span class="toc-number">1.1.3.</span> <span class="toc-text">Checksum log</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Heal"><span class="toc-number">1.1.4.</span> <span class="toc-text">Heal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#disable-checksum"><span class="toc-number">1.1.5.</span> <span class="toc-text">disable checksum</span></a></li></ol></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Data-integrity"><span class="toc-number">1.</span> <span class="toc-text">Data integrity</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-integrity-in-HDFS"><span class="toc-number">1.1.</span> <span class="toc-text">Data integrity in HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Write"><span class="toc-number">1.1.1.</span> <span class="toc-text">Write</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Read-and-Checksum-log"><span class="toc-number">1.1.2.</span> <span class="toc-text">Read and Checksum log</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DataBlockScanner"><span class="toc-number">1.1.3.</span> <span class="toc-text">DataBlockScanner</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Heal"><span class="toc-number">1.1.4.</span> <span class="toc-text">Heal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Disable-checksum"><span class="toc-number">1.1.5.</span> <span class="toc-text">Disable checksum</span></a></li></ol></li></ol></li></ol>
 </div>
 <style>
     .left-col .switch-btn {
