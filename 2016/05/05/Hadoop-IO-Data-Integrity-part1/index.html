@@ -11,7 +11,7 @@
 <meta property="og:url" content="http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/index.html">
 <meta property="og:site_name" content="Spark及Hadoop家族其他成员随笔">
 <meta property="og:description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
-<meta property="og:updated_time" content="2016-05-04T22:48:54.000Z">
+<meta property="og:updated_time" content="2016-05-04T23:00:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Hadoop IO - Data Integrity- part1">
 <meta name="twitter:description" content="Data integrityBecause every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing thro">
@@ -111,13 +111,13 @@
                 <div class="tips-box hide">
                     <div class="tips-arrow"></div>
                     <ul class="tips-inner">
-                        <li>Menu</li>
-                        <li>Tags</li>
+                        <li>菜单</li>
+                        <li>标签</li>
                         
-                        <li>Friends</li>
+                        <li>友情链接</li>
                         
                         
-                        <li>About Me</li>
+                        <li>关于我</li>
                         
                     </ul>
                 </div>
@@ -150,7 +150,7 @@
                 
                 <section class="switch-part switch-part2">
                     <div class="widget tagcloud" id="js-tagcloud">
-                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HDFS/">HDFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hadoop-HDFS/">Hadoop HDFS</a></li></ul>
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HDFS/">HDFS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hadoop/">Hadoop</a></li></ul>
                     </div>
                 </section>
                 
@@ -219,7 +219,7 @@
             </nav>
         </header>                
     </div>
-    <link class="menu-list" tags="Tags" friends="Friends" about="About Me"/>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
       <div class="body-wrap"><article id="post-Hadoop-IO-Data-Integrity-part1" class="article article-type-post" itemscope itemprop="blogPost">
   
@@ -249,7 +249,7 @@
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hadoop-HDFS/">Hadoop HDFS</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HDFS/">HDFS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hadoop/">Hadoop</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -259,17 +259,17 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h2 id="Data-integrity"><a href="#Data-integrity" class="headerlink" title="Data integrity"></a>Data integrity</h2><p>Because every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing through the system are as large as the ones Hadoop is capable of handling, the chance of data corruption occurring is high.</p>
+        <h1 id="Data-integrity"><a href="#Data-integrity" class="headerlink" title="Data integrity"></a>Data integrity</h1><p>Because every I/O operation on the disk or network carries with it a small chance of introducing errors into the data that it is reading or writing, when the volumes of data flowing through the system are as large as the ones Hadoop is capable of handling, the chance of data corruption occurring is high.</p>
 <p>The usual way of detecting corrupted data is by computing a checksum for the data when it first enters the system. </p>
 <p>CRC-32 is used for checksumming in Hadoop’s ChecksumFileSystem, while HDFS uses a more efficient variant called CRC-32C.</p>
-<h3 id="Data-integrity-in-HDFS"><a href="#Data-integrity-in-HDFS" class="headerlink" title="Data integrity in HDFS"></a>Data integrity in HDFS</h3><p>A separate checksum is created for every dfs.bytes-per-checksum bytes of data. The default is 512 bytes, and because a CRC-32C checksum is 4 bytes long, the storage overhead is less than 1%.</p>
-<h4 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h4><p>Datanodes are responsible for verifying the data they receive before storing the data and its checksum. </p>
+<h2 id="Data-integrity-in-HDFS"><a href="#Data-integrity-in-HDFS" class="headerlink" title="Data integrity in HDFS"></a>Data integrity in HDFS</h2><p>A separate checksum is created for every dfs.bytes-per-checksum bytes of data. The default is 512 bytes, and because a CRC-32C checksum is 4 bytes long, the storage overhead is less than 1%.</p>
+<h3 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h3><p>Datanodes are responsible for verifying the data they receive before storing the data and its checksum. </p>
 <p>A client writing data sends it to a pipeline of datanodes and the last datanode in the pipeline verifies the checksum. If the datanode detects an error, the client receives a subclass of IOException, which it should handle in an application-specific manner (for example, by retrying the operation).</p>
-<h4 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h4><p>When clients read data from datanodes, they verify checksums as well, comparing them with the ones stored at the datanodes. Each datanode keeps a persistent log of checksum verifications, so it knows the last time each of its blocks was verified. When a client successfully verifies a block, it tells the datanode, which updates its log. Keeping statistics such as these is valuable in detecting bad disks.</p>
-<h4 id="Checksum-log"><a href="#Checksum-log" class="headerlink" title="Checksum log"></a>Checksum log</h4><p>Each datanode runs a DataBlockScanner in a background thread that periodically verifies all the blocks stored on the datanode.</p>
-<h4 id="Heal"><a href="#Heal" class="headerlink" title="Heal"></a>Heal</h4><p>It can “heal” corrupted blocks by copying one of the good replicas to produce a new, uncorrupt replica.</p>
+<h3 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h3><p>When clients read data from datanodes, they verify checksums as well, comparing them with the ones stored at the datanodes. Each datanode keeps a persistent log of checksum verifications, so it knows the last time each of its blocks was verified. When a client successfully verifies a block, it tells the datanode, which updates its log. Keeping statistics such as these is valuable in detecting bad disks.</p>
+<h3 id="Checksum-log"><a href="#Checksum-log" class="headerlink" title="Checksum log"></a>Checksum log</h3><p>Each datanode runs a DataBlockScanner in a background thread that periodically verifies all the blocks stored on the datanode.</p>
+<h3 id="Heal"><a href="#Heal" class="headerlink" title="Heal"></a>Heal</h3><p>It can “heal” corrupted blocks by copying one of the good replicas to produce a new, uncorrupt replica.</p>
 <p>If a client detects an error when reading a block, it reports the bad block and the datanode it was trying to read from to the namenode before throwing a ChecksumException. The namenode marks the block replica as corrupt so it doesn’t direct any more clients  to it or try to copy this replica to another datanode.</p>
-<h4 id="disable-checksum"><a href="#disable-checksum" class="headerlink" title="disable checksum"></a>disable checksum</h4><p>Disable verification of checksums by passing false to the setVerifyChecksum() method on FileSystem before using the open() method to read a file. The same effect is possible from the shell by using the -ignoreCrc option with the -get or the equivalent -copyToLocal command.</p>
+<h3 id="disable-checksum"><a href="#disable-checksum" class="headerlink" title="disable checksum"></a>disable checksum</h3><p>Disable verification of checksums by passing false to the setVerifyChecksum() method on FileSystem before using the open() method to read a file. The same effect is possible from the shell by using the -ignoreCrc option with the -get or the equivalent -copyToLocal command.</p>
 
       
     </div>
@@ -278,17 +278,17 @@
   
     
     <div class="copyright">
-        <p><span>Title:</span><a href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/">Hadoop IO - Data Integrity- part1</a></p>
-        <p><span>Author:</span><a href="/" title="Back to Homepage">Lyndon Zhang</a></p>
-        <p><span>Created:</span>2016-05-05, 06:47:38</p>
-        <p><span>Updated:</span>2016-05-05, 06:48:54</p>
+        <p><span>本文标题:</span><a href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/">Hadoop IO - Data Integrity- part1</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Lyndon Zhang</a></p>
+        <p><span>发布时间:</span>2016-05-05, 06:47:38</p>
+        <p><span>最后更新:</span>2016-05-05, 07:00:07</p>
         <p>
-            <span>Full URL:</span><a class="post-url" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" title="Hadoop IO - Data Integrity- part1">http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/</a>
-            <span class="copy-path" data-clipboard-text="From http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/　　By Lyndon Zhang" title="Copy Article&#39;s Link &amp; Author"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" title="Hadoop IO - Data Integrity- part1">http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/</a>
+            <span class="copy-path" data-clipboard-text="原文: http://www.hellospark.me/2016/05/05/Hadoop-IO-Data-Integrity-part1/　　作者: Lyndon Zhang" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
-            <span>License:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"CC BY-NC-SA 4.0"</a> Keep Link &amp; Author if Distribute.
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
         </p>
     </div>
 
@@ -309,8 +309,8 @@
 </article>
 
     <div id="toc" class="toc-article">
-    <strong class="toc-title">Contents</strong>
-    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-integrity"><span class="toc-number">1.</span> <span class="toc-text">Data integrity</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-integrity-in-HDFS"><span class="toc-number">1.1.</span> <span class="toc-text">Data integrity in HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Write"><span class="toc-number">1.1.1.</span> <span class="toc-text">Write</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Read"><span class="toc-number">1.1.2.</span> <span class="toc-text">Read</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Checksum-log"><span class="toc-number">1.1.3.</span> <span class="toc-text">Checksum log</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Heal"><span class="toc-number">1.1.4.</span> <span class="toc-text">Heal</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#disable-checksum"><span class="toc-number">1.1.5.</span> <span class="toc-text">disable checksum</span></a></li></ol></li></ol></li></ol>
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Data-integrity"><span class="toc-number">1.</span> <span class="toc-text">Data integrity</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-integrity-in-HDFS"><span class="toc-number">1.1.</span> <span class="toc-text">Data integrity in HDFS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Write"><span class="toc-number">1.1.1.</span> <span class="toc-text">Write</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Read"><span class="toc-number">1.1.2.</span> <span class="toc-text">Read</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Checksum-log"><span class="toc-number">1.1.3.</span> <span class="toc-text">Checksum log</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Heal"><span class="toc-number">1.1.4.</span> <span class="toc-text">Heal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#disable-checksum"><span class="toc-number">1.1.5.</span> <span class="toc-text">disable checksum</span></a></li></ol></li></ol></li></ol>
 </div>
 <style>
     .left-col .switch-btn {
@@ -321,10 +321,10 @@
     }
 </style>
 
-<input type="button" id="tocButton" value="Hide"  title="Show or Hide Table of Contents">
+<input type="button" id="tocButton" value="隐藏目录"  title="点击按钮隐藏或者显示文章目录">
 <script>
-    var valueHide = "Hide";
-    var valueShow = "Show";
+    var valueHide = "隐藏目录";
+    var valueShow = "显示目录";
 
     if ($(".left-col").is(":hidden")) {
         $("#tocButton").attr("value", valueShow);
@@ -387,13 +387,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/" title="Back to Homepage"><i class="fa fa-home"></i></a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
-        <a title="Mini Archives"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/" title="Next: HDFS Concepts -- Blocks, NameNode, DataNode">
+            <a href="/2016/05/02/HDFS-Concepts-Blocks-NN-DN/" title="下一篇: HDFS Concepts -- Blocks, NameNode, DataNode">
                 <i class="fa fa-angle-right"></i>
             </a>
         
@@ -416,14 +416,14 @@
                 2016 Lyndon Zhang
             </div>
             <div class="footer-right">
-                <a href="http://hexo.io/" target="_blank" title="A fast, simple &amp; powerful blog framework">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="Another simple and elegant theme for Hexo">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
             </div>
         </div>
         
             <div class="visit">
                 
                     <span id="busuanzi_container_site_pv" style='display:none'>
-                        <span id="site-visit" >Site Visitors: 
+                        <span id="site-visit" >本站到访数: 
                             <span id="busuanzi_value_site_uv"></span>
                         </span>
                     </span>
@@ -433,7 +433,7 @@
                 
                 
                     <span id="busuanzi_container_page_pv" style='display:none'>
-                        <span id="page-visit">Page Hits: 
+                        <span id="page-visit">本页阅读量: 
                             <span id="busuanzi_value_page_pv"></span>
                         </span>
                     </span>
@@ -479,9 +479,9 @@ ga('send', 'pageview');
 
 
 <div class="scroll" id="scroll">
-    <a href="#" title="Back to Top"><i class="fa fa-arrow-up"></i></a>
-    <a href="#comments" title="Comments"><i class="fa fa-comments-o"></i></a>
-    <a href="#footer" title="Go to Bottom"><i class="fa fa-arrow-down"></i></a>
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
 </div>
 
 <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
