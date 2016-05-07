@@ -264,6 +264,115 @@
             
               
                 
+                <a class="post-title-link" href="/2016/05/07/HDFS-Architecture/" itemprop="url">
+                  HDFS架构详解(天坑待续)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-07T23:03:43+08:00" content="2016-05-07">
+              2016-05-07
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/07/HDFS-Architecture/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/07/HDFS-Architecture/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>分布式文件系统（HDFS）用来存储非常大的数据集。HDFS保证数据的可靠性的同时能够为应用程序提供高的吞吐量。在一个大的集群里面，数千个节点各自执行存储和运算任务。通过分布式存储和计算，资源可以用经济性的设备按照需求来调整。</p>
+<h1 id="HDFS介绍-待续"><a href="#HDFS介绍-待续" class="headerlink" title="HDFS介绍(待续)"></a>HDFS介绍(待续)</h1><p>Hadoop提供了HDFS和MapReduce框架来分析和转化非常大的数据集。HDFS的使用起来很像Unix的文件系统。提供的命令行接口基本和Unix一致， 比如 hdfs dfs -ls / -rm / -cat /-mv.   但是为了提高应用程序的性能，<br>HDFS并不遵守Unix的标准。</p>
+<p>Hadoop的主要特征就是：</p>
+<ul>
+<li>把数据分块</li>
+<li>在很多（以千计）的节点间运算</li>
+<li>在靠近数据的地方并行的运算应用程序</li>
+</ul>
+<p>Hadoop集群用经济型的服务器来增加计算，存储，IO带宽的规模。HDFS把应用数据和元数据分开来存储。<br>HDFS把元数据（metadata）存放在一个专门的服务器上，叫做Namenode。应用数据被存储在其他重点服务器上，他们叫做Datanode。<br>所有的服务器都被连接起来，用TCP/IP协议来交流。为了数据可靠性，应用数据都会被复制到不同的多个Datanode上。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/05/05/Hadoop-IO-Data-Integrity-part1/" itemprop="url">
                   Hadoop IO - Data Integrity- part1
                 </a>
@@ -620,7 +729,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-count">4</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
