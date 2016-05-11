@@ -70,7 +70,7 @@
 <link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hadoop, MapReduce, HDFS, Spark" />
+  <meta name="keywords" content="YARN,Hadoop," />
 
 
 
@@ -86,15 +86,45 @@
 
 
 
-<meta name="description" content="跟我一起学Hadoop 从零开始由浅入深">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Big data及Hadoop分享">
-<meta property="og:url" content="http://www.hellospark.me/archives/2016/04/index.html">
+<meta name="description" content="概述这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:
+
+程序在YARN中的生命周期
+YARN的由来
+YARN中的组件的介绍
+YARN常用的调度算法
+
+程序在YARN中的生命周期
+如上图所示, YARN中一个application的运行流程如下:
+Client提交一个application，以及必要的specification来启动Application">
+<meta property="og:type" content="article">
+<meta property="og:title" content="YARN详细介绍">
+<meta property="og:url" content="http://www.hellospark.me/2016/05/11/YARN/index.html">
 <meta property="og:site_name" content="Big data及Hadoop分享">
-<meta property="og:description" content="跟我一起学Hadoop 从零开始由浅入深">
+<meta property="og:description" content="概述这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:
+
+程序在YARN中的生命周期
+YARN的由来
+YARN中的组件的介绍
+YARN常用的调度算法
+
+程序在YARN中的生命周期
+如上图所示, YARN中一个application的运行流程如下:
+Client提交一个application，以及必要的specification来启动Application">
+<meta property="og:image" content="http://www.hellospark.me/images/yarnflow.png">
+<meta property="og:updated_time" content="2016-05-11T15:02:30.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Big data及Hadoop分享">
-<meta name="twitter:description" content="跟我一起学Hadoop 从零开始由浅入深">
+<meta name="twitter:title" content="YARN详细介绍">
+<meta name="twitter:description" content="概述这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:
+
+程序在YARN中的生命周期
+YARN的由来
+YARN中的组件的介绍
+YARN常用的调度算法
+
+程序在YARN中的生命周期
+如上图所示, YARN中一个application的运行流程如下:
+Client提交一个application，以及必要的specification来启动Application">
+<meta name="twitter:image" content="http://www.hellospark.me/images/yarnflow.png">
 
 
 
@@ -112,7 +142,7 @@
   };
 </script>
 
-  <title> 归档 | Big data及Hadoop分享 </title>
+  <title> YARN详细介绍 | Big data及Hadoop分享 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -152,7 +182,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left  page-archive  ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -240,66 +270,156 @@
           <div id="content" class="content">
             
 
-  <section id="posts" class="posts-collapse">
-    <span class="archive-move-on"></span>
-
-    <span class="archive-page-counter">
-      
-      
-      
-        
-      
-      嗯..! 目前共计 5 篇日志。 继续努力。
-    </span>
-
+  <div id="posts" class="posts-expand">
     
 
-      
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                YARN详细介绍
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-11T22:49:17+08:00" content="2016-05-11">
+              2016-05-11
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/11/YARN/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/11/YARN/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+              &nbsp; | &nbsp;
+              <span class="page-pv"><i class="fa fa-file-o"></i>
+              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+              </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
       
       
 
       
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:</p>
+<ul>
+<li>程序在YARN中的生命周期</li>
+<li>YARN的由来</li>
+<li>YARN中的组件的介绍</li>
+<li>YARN常用的调度算法</li>
+</ul>
+<h1 id="程序在YARN中的生命周期"><a href="#程序在YARN中的生命周期" class="headerlink" title="程序在YARN中的生命周期"></a>程序在YARN中的生命周期</h1><img src="/images/yarnflow.png">
+<h3 id="如上图所示-YARN中一个application的运行流程如下"><a href="#如上图所示-YARN中一个application的运行流程如下" class="headerlink" title="如上图所示, YARN中一个application的运行流程如下:"></a>如上图所示, YARN中一个application的运行流程如下:</h3><ol>
+<li>Client提交一个application，以及必要的specification来启动ApplicationMaster</li>
+<li>ResourceManager敲定一个用来启动ApplicationMaster的container。 然后启动ApplicationMaster</li>
+<li>ApplicationMaster启动时会向ResourceManager注册。 注册后，client可以向ResourceManager查询ApplicationMaster的详细信息，并且client可以直接和ApplicationMaster通信。</li>
+<li>ApplicationMaster通过resourcerequest 协议来敲定更多的Container资源</li>
+<li>ApplicationMaster向NodeManager提供详细的信息来启动Container。 之后Container可以和ApplicationMaster通信</li>
+<li>application会在Container里面执行，并根据applicaion-specific的协议来向ApplicationMaster报告状态</li>
+<li>在appliation运行期间，client直接通过application-specific协议来和ApplicationMaster通信去获取运行状态以及进展</li>
+<li>application结束后，ApplicationMater会向ResourceManager注销然后释放资源。</li>
+</ol>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="http://hortonworks.com/blog/apache-hadoop-yarn-background-and-an-overview/" target="_blank" rel="external">http://hortonworks.com/blog/apache-hadoop-yarn-background-and-an-overview/</a></li>
+<li><a href="http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html" target="_blank" rel="external">http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html</a></li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
         
-        <div class="collection-title">
-          <h2 class="archive-year motion-element" id="archive-year-2016">2016</h2>
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/YARN/" rel="tag">#YARN</a>
+          
+            <a href="/tags/Hadoop/" rel="tag">#Hadoop</a>
+          
         </div>
       
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/07/HDFS-Architecture/" rel="next" title="HDFS架构详解(天坑待续)">
+                <i class="fa fa-chevron-left"></i> HDFS架构详解(天坑待续)
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
       
 
       
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h1 class="post-title">
-        
-            <a class="post-title-link" href="/2016/04/30/the-design-of-HDFS/" itemprop="url">
-              
-                <span itemprop="name">HDFS 的设计</span>
-              
-            </a>
-        
-      </h1>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2016-04-30T22:07:56+08:00"
-              content="2016-04-30" >
-          04-30
-        </time>
-      </div>
-
-    </header>
+      
+    </footer>
   </article>
 
 
 
-    
-
-  </section>
-
-  
-
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -307,6 +427,14 @@
 
 
           
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/05/11/YARN/"
+           data-title="YARN详细介绍" data-url="http://www.hellospark.me/2016/05/11/YARN/">
+      </div>
+    
+  </div>
+
 
         </div>
         
@@ -326,8 +454,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.png"
@@ -412,6 +549,17 @@
 
       </section>
 
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序在YARN中的生命周期"><span class="nav-number">2.</span> <span class="nav-text">程序在YARN中的生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如上图所示-YARN中一个application的运行流程如下"><span class="nav-number">2.0.1.</span> <span class="nav-text">如上图所示, YARN中一个application的运行流程如下:</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+          </div>
+        </section>
       
 
     </div>
@@ -531,11 +679,9 @@
 
 
   
-  
-    <script type="text/javascript" id="motion.page.archive">
-      $('.archive-year').velocity('transition.slideLeftIn');
-    </script>
-  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
 
 
   

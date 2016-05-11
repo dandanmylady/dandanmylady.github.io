@@ -264,6 +264,128 @@
             
               
                 
+                <a class="post-title-link" href="/2016/05/11/YARN/" itemprop="url">
+                  YARN详细介绍
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-11T22:49:17+08:00" content="2016-05-11">
+              2016-05-11
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/11/YARN/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/11/YARN/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:</p>
+<ul>
+<li>程序在YARN中的生命周期</li>
+<li>YARN的由来</li>
+<li>YARN中的组件的介绍</li>
+<li>YARN常用的调度算法</li>
+</ul>
+<h1 id="程序在YARN中的生命周期"><a href="#程序在YARN中的生命周期" class="headerlink" title="程序在YARN中的生命周期"></a>程序在YARN中的生命周期</h1><img src="/images/yarnflow.png">
+<h3 id="如上图所示-YARN中一个application的运行流程如下"><a href="#如上图所示-YARN中一个application的运行流程如下" class="headerlink" title="如上图所示, YARN中一个application的运行流程如下:"></a>如上图所示, YARN中一个application的运行流程如下:</h3><ol>
+<li>Client提交一个application，以及必要的specification来启动ApplicationMaster</li>
+<li>ResourceManager敲定一个用来启动ApplicationMaster的container。 然后启动ApplicationMaster</li>
+<li>ApplicationMaster启动时会向ResourceManager注册。 注册后，client可以向ResourceManager查询ApplicationMaster的详细信息，并且client可以直接和ApplicationMaster通信。</li>
+<li>ApplicationMaster通过resourcerequest 协议来敲定更多的Container资源</li>
+<li>ApplicationMaster向NodeManager提供详细的信息来启动Container。 之后Container可以和ApplicationMaster通信</li>
+<li>application会在Container里面执行，并根据applicaion-specific的协议来向ApplicationMaster报告状态</li>
+<li>在appliation运行期间，client直接通过application-specific协议来和ApplicationMaster通信去获取运行状态以及进展</li>
+<li>application结束后，ApplicationMater会向ResourceManager注销然后释放资源。</li>
+</ol>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ul>
+<li><a href="http://hortonworks.com/blog/apache-hadoop-yarn-background-and-an-overview/" target="_blank" rel="external">http://hortonworks.com/blog/apache-hadoop-yarn-background-and-an-overview/</a></li>
+<li><a href="http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html" target="_blank" rel="external">http://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/05/07/HDFS-Architecture/" itemprop="url">
                   HDFS架构详解(天坑待续)
                 </a>
@@ -729,7 +851,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">4</span>
+              <span class="site-state-item-count">5</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -739,7 +861,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">3</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
