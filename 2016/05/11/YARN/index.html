@@ -86,45 +86,39 @@
 
 
 
-<meta name="description" content="概述这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:
+<meta name="description" content="概述Yarn本来只是MapReduce的一部分,后来变成了Hadoop一个独立的项目. 让我们带着如下问题一起来探讨下Yarn:
 
-程序在YARN中的生命周期
-YARN的由来
-YARN中的组件的介绍
-YARN常用的调度算法
+Yarn相比于其前身MapReduce 1到底有什么改进?
+Yarn包含哪些组件?
+一个Application到底是如何再Yarn中运行的.
 
-程序在YARN中的生命周期
-如上图所示, YARN中一个application的运行流程如下:
-Client提交一个application，以及必要的specification来启动Application">
+YARN的前身 - MapReduce 1在YARN之前,Hadoop的MapReduce系统由一个JobTracker和位">
 <meta property="og:type" content="article">
 <meta property="og:title" content="YARN详细介绍">
 <meta property="og:url" content="http://www.hellospark.me/2016/05/11/YARN/index.html">
 <meta property="og:site_name" content="Big data及Hadoop分享">
-<meta property="og:description" content="概述这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:
+<meta property="og:description" content="概述Yarn本来只是MapReduce的一部分,后来变成了Hadoop一个独立的项目. 让我们带着如下问题一起来探讨下Yarn:
 
-程序在YARN中的生命周期
-YARN的由来
-YARN中的组件的介绍
-YARN常用的调度算法
+Yarn相比于其前身MapReduce 1到底有什么改进?
+Yarn包含哪些组件?
+一个Application到底是如何再Yarn中运行的.
 
-程序在YARN中的生命周期
-如上图所示, YARN中一个application的运行流程如下:
-Client提交一个application，以及必要的specification来启动Application">
+YARN的前身 - MapReduce 1在YARN之前,Hadoop的MapReduce系统由一个JobTracker和位">
+<meta property="og:image" content="http://hortonworks.com/wp-content/uploads/2012/08/MRArch.png">
+<meta property="og:image" content="http://www.hellospark.me/images/YARNArch.png">
+<meta property="og:image" content="http://www.hellospark.me/images/hddg_0401.png">
 <meta property="og:image" content="http://www.hellospark.me/images/yarnflow.png">
-<meta property="og:updated_time" content="2016-05-11T15:02:30.000Z">
+<meta property="og:updated_time" content="2016-05-16T15:12:15.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="YARN详细介绍">
-<meta name="twitter:description" content="概述这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:
+<meta name="twitter:description" content="概述Yarn本来只是MapReduce的一部分,后来变成了Hadoop一个独立的项目. 让我们带着如下问题一起来探讨下Yarn:
 
-程序在YARN中的生命周期
-YARN的由来
-YARN中的组件的介绍
-YARN常用的调度算法
+Yarn相比于其前身MapReduce 1到底有什么改进?
+Yarn包含哪些组件?
+一个Application到底是如何再Yarn中运行的.
 
-程序在YARN中的生命周期
-如上图所示, YARN中一个application的运行流程如下:
-Client提交一个application，以及必要的specification来启动Application">
-<meta name="twitter:image" content="http://www.hellospark.me/images/yarnflow.png">
+YARN的前身 - MapReduce 1在YARN之前,Hadoop的MapReduce系统由一个JobTracker和位">
+<meta name="twitter:image" content="http://hortonworks.com/wp-content/uploads/2012/08/MRArch.png">
 
 
 
@@ -343,14 +337,54 @@ Client提交一个application，以及必要的specification来启动Application
       
 
       
-        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>这篇博客先以YARN中一个application的生命周期为切入点介绍下YARN. 主要介绍:</p>
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Yarn本来只是MapReduce的一部分,后来变成了Hadoop一个独立的项目. 让我们带着如下问题一起来探讨下Yarn:</p>
 <ul>
-<li>程序在YARN中的生命周期</li>
-<li>YARN的由来</li>
-<li>YARN中的组件的介绍</li>
-<li>YARN常用的调度算法</li>
+<li>Yarn相比于其前身MapReduce 1到底有什么改进?</li>
+<li>Yarn包含哪些组件?</li>
+<li>一个Application到底是如何再Yarn中运行的.</li>
 </ul>
-<h1 id="程序在YARN中的生命周期"><a href="#程序在YARN中的生命周期" class="headerlink" title="程序在YARN中的生命周期"></a>程序在YARN中的生命周期</h1><img src="/images/yarnflow.png">
+<h1 id="YARN的前身-MapReduce-1"><a href="#YARN的前身-MapReduce-1" class="headerlink" title="YARN的前身 - MapReduce 1"></a>YARN的前身 - MapReduce 1</h1><p>在YARN之前,Hadoop的MapReduce系统由一个JobTracker和位于各个节点上的TaskTracker组成. 在介绍完Yarn后,我们一起比较下这两个架构.<br><img src="http://hortonworks.com/wp-content/uploads/2012/08/MRArch.png" alt="link"></p>
+<p>JobTracker负责:</p>
+<ul>
+<li>资源管理</li>
+<li>跟踪资源消耗/可用资源</li>
+<li>Job生命周期管理(调度Job的每个task,跟踪状态,提高灾难恢复等)</li>
+</ul>
+<p>TaskTracker的职责非常简单: </p>
+<ul>
+<li>根据JobTracker的指示启动/销毁Task</li>
+<li>周期性的想JobTracker报告Task状态</li>
+</ul>
+<h1 id="YARN介绍"><a href="#YARN介绍" class="headerlink" title="YARN介绍"></a>YARN介绍</h1><p>YARN把JobTracker的拆分成两个组件: 一个全局的ResourceManager和每个application一个的ApplicationMaster.</p>
+<p><strong>ResourceMnager</strong>是所有applications的资源仲裁终极机构. ResourceManager有一个pluggable的scheduler. schedualer负责根据你capacity/queque的配置来为各个application分配资源. </p>
+<p>scheduler是一个纯粹的调度器,它不会监视application的状态,也不为application提供任何灾难恢复. Scheduler基于application的资源请求执行自己的调度任务, 它调度资源的时候基于Container的概念.  Container由各种资源组成,比如memory,cpu,disk,network等等</p>
+<p><strong>ApplicationMaster</strong>和schedualer磋商资源,然后和NodeManager一起启动Container. ApplicationMaster监视每个container的状态. 站在Hadoop系统的角度上, ApplicationMaster也是一个普通的container.</p>
+<p><strong>NodeManager</strong>运行在每个node上. 它负责启动application的container.然后向ResourceManager报告资源的使用状态.</p>
+<h3 id="Yarn的架构如下"><a href="#Yarn的架构如下" class="headerlink" title="Yarn的架构如下:"></a>Yarn的架构如下:</h3><img src="/images/YARNArch.png">
+<h1 id="YARN的优点"><a href="#YARN的优点" class="headerlink" title="YARN的优点"></a>YARN的优点</h1><ul>
+<li>Scalability: <ul>
+<li>MapReduce 1 最多可支持4000个节点的集群.因为JobTracker负责的职责太多而成为瓶颈</li>
+<li>Yarn 可以支持10000个节点,并行100000个task.</li>
+</ul>
+</li>
+<li>Availability: <ul>
+<li>MapReduce 1 的JobTracker的状态变化非常迅速(想象下每个Task过几秒都会想它报告状态). 这使得JotTracker很难实现HA(高可用性). 通常HA都是通过备份当前系统的状态然后当系统失败备用系统用备份的状态来继续工作.</li>
+<li>Yarn的ResourceManager职责很简单,很容易实现HA</li>
+</ul>
+</li>
+<li>Utilization: <ul>
+<li>MapReduce 1中,每个TaskTracker都会配置好固定个数的Slots. 这些slots会被配置成Map slots和Reduce slots. Map slot只能用来运行Map Task, Reduce slot只能运行Reduce Task. 这样资源利用率很低.</li>
+<li>Yarn中没有slot的概念. NodeManager管理一个资源池,按需启动Container.</li>
+</ul>
+</li>
+<li>Multitenancy: <ul>
+<li>MapReduce 1只能运行MapReduce应用.</li>
+<li>Yarn最大的好处之一就是职称很多其他类型的分布式Application. 如下图:<img src="/images/hddg_0401.png">
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="YARN如何运行application"><a href="#YARN如何运行application" class="headerlink" title="YARN如何运行application"></a>YARN如何运行application</h1><img src="/images/yarnflow.png">
 <h3 id="如上图所示-YARN中一个application的运行流程如下"><a href="#如上图所示-YARN中一个application的运行流程如下" class="headerlink" title="如上图所示, YARN中一个application的运行流程如下:"></a>如上图所示, YARN中一个application的运行流程如下:</h3><ol>
 <li>Client提交一个application，以及必要的specification来启动ApplicationMaster</li>
 <li>ResourceManager敲定一个用来启动ApplicationMaster的container。 然后启动ApplicationMaster</li>
@@ -556,7 +590,7 @@ Client提交一个application，以及必要的specification来启动Application
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#程序在YARN中的生命周期"><span class="nav-number">2.</span> <span class="nav-text">程序在YARN中的生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如上图所示-YARN中一个application的运行流程如下"><span class="nav-number">2.0.1.</span> <span class="nav-text">如上图所示, YARN中一个application的运行流程如下:</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#YARN的前身-MapReduce-1"><span class="nav-number">2.</span> <span class="nav-text">YARN的前身 - MapReduce 1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#YARN介绍"><span class="nav-number">3.</span> <span class="nav-text">YARN介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Yarn的架构如下"><span class="nav-number">3.0.1.</span> <span class="nav-text">Yarn的架构如下:</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#YARN的优点"><span class="nav-number">4.</span> <span class="nav-text">YARN的优点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#YARN如何运行application"><span class="nav-number">5.</span> <span class="nav-text">YARN如何运行application</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#如上图所示-YARN中一个application的运行流程如下"><span class="nav-number">5.0.1.</span> <span class="nav-text">如上图所示, YARN中一个application的运行流程如下:</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
           </div>
         </section>
