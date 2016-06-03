@@ -264,6 +264,385 @@
             
               
                 
+                <a class="post-title-link" href="/2016/06/03/MapReduce-code-go-through/" itemprop="url">
+                  MapReduce 代码走读
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-03T08:49:04+08:00" content="2016-06-03">
+              2016-06-03
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/03/MapReduce-code-go-through/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/03/MapReduce-code-go-through/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>通过代码学习可能比看书更加适合广大攻城狮/程序猿们. 让我们来通过一个最常见的例子”WordCount”来看看,MapReduce常用的几个类如何使用以及之间的关系.</p>
+<h2 id="WordCount"><a href="#WordCount" class="headerlink" title="WordCount"></a>WordCount</h2><p>这个WordCount是Hadoop官方文档里面给的一个简单的MapReduce范例代码. 顾名思义,它是用来计算文件里面每个单词出现的次数. 下面是他的代码,然后让我们来一起 <del>reading the F**king source code</del> 学习学习.</p>
+<pre><code>package lyndon.my_mr;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.io.VIntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.fs.Path;
+
+
+public class MyWordCounter
+{
+    public static class MyWordCounterMapper extends Mapper&lt;LongWritable, Text, Text, VIntWritable&gt;
+    {
+        private final static VIntWritable one = new VIntWritable(1);
+        private Text word = new Text();
+
+        public void map(LongWritable key, Text value, Context context)
+                throws IOException, InterruptedException
+        {
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            while(itr.hasMoreTokens())
+            {
+                word.set(itr.nextToken());
+                context.write(word, one);
+            }
+        }
+    }
+
+    public static class MyWordCounterReducer extends Reducer&lt;Text, VIntWritable, Text, VIntWritable&gt;
+    {
+        private VIntWritable result = new VIntWritable();
+        public void reduce(Text key, Iterable&lt;VIntWritable&gt; values, Context context) 
+                throws IOException, InterruptedException
+        {
+            int sum = 0;
+            for(VIntWritable val : values)
+            {
+                sum += val.get();
+            }
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+
+    public static void main(String args[]) throws Exception
+    {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, &quot;my word counter&quot;);
+        job.setJarByClass(MyWordCounter.class);
+        job.setMapperClass(MyWordCounterMapper.class);
+        job.setReducerClass(MyWordCounterReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(VIntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+</code></pre><p>这段代码仔细看分为三部分:</p>
+<ol>
+<li>MyWordCounterMapper: Mapper类的实现</li>
+<li>MyWordCounterReducer: Reducer类的实现</li>
+<li>main()方法: 构造Job类的instance</li>
+</ol>
+<h2 id="Job类"><a href="#Job类" class="headerlink" title="Job类"></a>Job类</h2><p>在工作中,我们工程师的工作应该是集中于开发Mapper和Reducer. 但是处于学习和理解MapReduce的目的,我们先研究下Job.<br>通过上面的代码,我们可以看到Job的对象被设置了如下几项:</p>
+<ol>
+<li>Configuration 对象</li>
+<li>Mapper类</li>
+<li>Reducer类</li>
+<li>Output Key/Value 类型</li>
+<li>输入输出Path</li>
+</ol>
+<p>job.waitForCompletion()方法会submit job,然后等它执行结束.  那么问题来了,submit()方法干了啥?</p>
+<p>###Job类中submit()的实现:</p>
+<pre><code>public void submit() 
+       throws IOException, InterruptedException, ClassNotFoundException {
+  ensureState(JobState.DEFINE);
+  setUseNewAPI();
+  connect();
+  final JobSubmitter submitter = 
+      getJobSubmitter(cluster.getFileSystem(), cluster.getClient());
+  status = ugi.doAs(new PrivilegedExceptionAction&lt;JobStatus&gt;() {
+    public JobStatus run() throws IOException, InterruptedException, 
+    ClassNotFoundException {
+      return submitter.submitJobInternal(Job.this, cluster);
+    }
+  });
+  state = JobState.RUNNING;
+  LOG.info(&quot;The url to track the job: &quot; + getTrackingURL());
+ }
+</code></pre><p>由此可见, submit方法主要是构造了一个JobSubmitter类的instance然后调用 submitter.submitJobInternal()方法.  </p>
+<p>###JobSubmitter类中submitJobInternal()的实现：</p>
+<pre><code>JobStatus submitJobInternal(Job job, Cluster cluster) 
+throws ClassNotFoundException, InterruptedException, IOException {
+
+  //validate the jobs output specs 
+  checkSpecs(job);
+
+  Configuration conf = job.getConfiguration();
+  addMRFrameworkToDistributedCache(conf);
+
+  Path jobStagingArea = JobSubmissionFiles.getStagingDir(cluster, conf);
+  //configure the command line options correctly on the submitting dfs
+  InetAddress ip = InetAddress.getLocalHost();
+  if (ip != null) {
+    submitHostAddress = ip.getHostAddress();
+    submitHostName = ip.getHostName();
+    conf.set(MRJobConfig.JOB_SUBMITHOST,submitHostName);
+    conf.set(MRJobConfig.JOB_SUBMITHOSTADDR,submitHostAddress);
+  }
+  JobID jobId = submitClient.getNewJobID();
+  job.setJobID(jobId);
+  Path submitJobDir = new Path(jobStagingArea, jobId.toString());
+  JobStatus status = null;
+  try {
+    conf.set(MRJobConfig.USER_NAME,
+        UserGroupInformation.getCurrentUser().getShortUserName());
+    conf.set(&quot;hadoop.http.filter.initializers&quot;, 
+        &quot;org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer&quot;);
+    conf.set(MRJobConfig.MAPREDUCE_JOB_DIR, submitJobDir.toString());
+    LOG.debug(&quot;Configuring job &quot; + jobId + &quot; with &quot; + submitJobDir 
+        + &quot; as the submit dir&quot;);
+    // get delegation token for the dir
+    TokenCache.obtainTokensForNamenodes(job.getCredentials(),
+        new Path[] { submitJobDir }, conf);
+
+    populateTokenCache(conf, job.getCredentials());
+
+    // generate a secret to authenticate shuffle transfers
+    if (TokenCache.getShuffleSecretKey(job.getCredentials()) == null) {
+      KeyGenerator keyGen;
+      try {
+        keyGen = KeyGenerator.getInstance(SHUFFLE_KEYGEN_ALGORITHM);
+        keyGen.init(SHUFFLE_KEY_LENGTH);
+      } catch (NoSuchAlgorithmException e) {
+        throw new IOException(&quot;Error generating shuffle secret key&quot;, e);
+      }
+      SecretKey shuffleKey = keyGen.generateKey();
+      TokenCache.setShuffleSecretKey(shuffleKey.getEncoded(),
+          job.getCredentials());
+    }
+    if (CryptoUtils.isEncryptedSpillEnabled(conf)) {
+      conf.setInt(MRJobConfig.MR_AM_MAX_ATTEMPTS, 1);
+      LOG.warn(&quot;Max job attempts set to 1 since encrypted intermediate&quot; +
+              &quot;data spill is enabled&quot;);
+    }
+
+    copyAndConfigureFiles(job, submitJobDir);
+
+    Path submitJobFile = JobSubmissionFiles.getJobConfPath(submitJobDir);
+
+    // Create the splits for the job
+    LOG.debug(&quot;Creating splits at &quot; + jtFs.makeQualified(submitJobDir));
+    int maps = writeSplits(job, submitJobDir);
+    conf.setInt(MRJobConfig.NUM_MAPS, maps);
+    LOG.info(&quot;number of splits:&quot; + maps);
+
+    // write &quot;queue admins of the queue to which job is being submitted&quot;
+    // to job file.
+    String queue = conf.get(MRJobConfig.QUEUE_NAME,
+        JobConf.DEFAULT_QUEUE_NAME);
+    AccessControlList acl = submitClient.getQueueAdmins(queue);
+    conf.set(toFullPropertyName(queue,
+        QueueACL.ADMINISTER_JOBS.getAclName()), acl.getAclString());
+
+    // removing jobtoken referrals before copying the jobconf to HDFS
+    // as the tasks don&apos;t need this setting, actually they may break
+    // because of it if present as the referral will point to a
+    // different job.
+    TokenCache.cleanUpTokenReferral(conf);
+
+    if (conf.getBoolean(
+        MRJobConfig.JOB_TOKEN_TRACKING_IDS_ENABLED,
+        MRJobConfig.DEFAULT_JOB_TOKEN_TRACKING_IDS_ENABLED)) {
+      // Add HDFS tracking ids
+      ArrayList&lt;String&gt; trackingIds = new ArrayList&lt;String&gt;();
+      for (Token&lt;? extends TokenIdentifier&gt; t :
+          job.getCredentials().getAllTokens()) {
+        trackingIds.add(t.decodeIdentifier().getTrackingId());
+      }
+      conf.setStrings(MRJobConfig.JOB_TOKEN_TRACKING_IDS,
+          trackingIds.toArray(new String[trackingIds.size()]));
+    }
+
+    // Set reservation info if it exists
+    ReservationId reservationId = job.getReservationId();
+    if (reservationId != null) {
+      conf.set(MRJobConfig.RESERVATION_ID, reservationId.toString());
+    }
+
+    // Write job file to submit dir
+    writeConf(conf, submitJobFile);
+
+    //
+    // Now, actually submit the job (using the submit name)
+    //
+    printTokens(jobId, job.getCredentials());
+    status = submitClient.submitJob(
+        jobId, submitJobDir.toString(), job.getCredentials());
+    if (status != null) {
+      return status;
+    } else {
+      throw new IOException(&quot;Could not launch job&quot;);
+    }
+  } finally {
+    if (status == null) {
+      LOG.info(&quot;Cleaning up the staging area &quot; + submitJobDir);
+      if (jtFs != null &amp;&amp; submitJobDir != null)
+        jtFs.delete(submitJobDir, true);
+
+    }
+  }
+}
+</code></pre><p>这个方法的主要任务是：</p>
+<ol>
+<li>检查Input/Output的Spec</li>
+<li>为Job计算InputSplits</li>
+<li>把Jar文件和conf文件拷贝到HDFS的map-reduce系统目录</li>
+<li>向JobTracker提交job请求，然后监视job状态</li>
+</ol>
+<p>2#计算InputSplits是由FileInputFormat类中的getSplits()方法实现。下面是计算getSplits()方法的一段代码。 </p>
+<pre><code>if (isSplitable(job, path)) 
+{
+      long blockSize = file.getBlockSize();
+      long splitSize = computeSplitSize(blockSize, minSize, maxSize);
+
+      long bytesRemaining = length;
+      while (((double) bytesRemaining)/splitSize &gt; SPLIT_SLOP) {
+        int blkIndex = getBlockIndex(blkLocations, length-bytesRemaining);
+        splits.add(makeSplit(path, length-bytesRemaining, splitSize,
+                    blkLocations[blkIndex].getHosts(),
+                    blkLocations[blkIndex].getCachedHosts()));
+        bytesRemaining -= splitSize;
+      }
+
+      if (bytesRemaining != 0) {
+        int blkIndex = getBlockIndex(blkLocations, length-bytesRemaining);
+        splits.add(makeSplit(path, length-bytesRemaining, bytesRemaining,
+                   blkLocations[blkIndex].getHosts(),
+                   blkLocations[blkIndex].getCachedHosts()));
+      }
+    }
+</code></pre><p>3#JobTracker在本地文件系统有个系统目录，名字就叫做’jobTracker’. 每一个正在运行的job，都有两个文件在这个目录下：</p>
+<ul>
+<li>jobTracker/<jobid>.xml</jobid></li>
+<li>jobTracker/<jobid>.jar </jobid></li>
+</ul>
+<p>4#提交job请求，是由ClientProtocol类对象的submitJob()方法来实现的。 ClientProtocol是JobClient和中央JobTracker通信的协议。</p>
+<h1 id="Mapper-类"><a href="#Mapper-类" class="headerlink" title="Mapper 类"></a>Mapper 类</h1><p>Mapper的工作流程有run（）方法控制，用户可以override这个方法来定制特殊的workflow.</p>
+<pre><code>/**
+ * Expert users can override this method for more complete control over the
+ * execution of the Mapper.
+ * @param context
+ * @throws IOException
+ */
+public void run(Context context) throws IOException, InterruptedException {
+  setup(context);
+  try {
+    while (context.nextKeyValue()) {
+      map(context.getCurrentKey(), context.getCurrentValue(), context);
+    }
+  } finally {
+    cleanup(context);
+  }
+}
+</code></pre><p>Run（）方法先运行setup（）然后调用map（）方法处理每个context，最后执行cleanup（）<br>一般我们只需要实现自己的map（）方法，但是上面出现的四个方法，我们都可以override，取决于自己项目的需要。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/05/11/YARN/" itemprop="url">
                   YARN详细介绍
                 </a>
@@ -891,7 +1270,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-count">6</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -901,7 +1280,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">4</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

@@ -1,0 +1,959 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="google-site-verification" content="Ej91TiJi7CrymEW4RNSdR1TQpfxw1DzXHW3faQuzzZQ" />
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MapReduce," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="概述通过代码学习可能比看书更加适合广大攻城狮/程序猿们. 让我们来通过一个最常见的例子”WordCount”来看看,MapReduce常用的几个类如何使用以及之间的关系.
+WordCount这个WordCount是Hadoop官方文档里面给的一个简单的MapReduce范例代码. 顾名思义,它是用来计算文件里面每个单词出现的次数. 下面是他的代码,然后让我们来一起 reading the F**k">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MapReduce 代码走读">
+<meta property="og:url" content="http://www.hellospark.me/2016/06/03/MapReduce-code-go-through/index.html">
+<meta property="og:site_name" content="Big data及Hadoop分享">
+<meta property="og:description" content="概述通过代码学习可能比看书更加适合广大攻城狮/程序猿们. 让我们来通过一个最常见的例子”WordCount”来看看,MapReduce常用的几个类如何使用以及之间的关系.
+WordCount这个WordCount是Hadoop官方文档里面给的一个简单的MapReduce范例代码. 顾名思义,它是用来计算文件里面每个单词出现的次数. 下面是他的代码,然后让我们来一起 reading the F**k">
+<meta property="og:updated_time" content="2016-06-03T00:52:12.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MapReduce 代码走读">
+<meta name="twitter:description" content="概述通过代码学习可能比看书更加适合广大攻城狮/程序猿们. 让我们来通过一个最常见的例子”WordCount”来看看,MapReduce常用的几个类如何使用以及之间的关系.
+WordCount这个WordCount是Hadoop官方文档里面给的一个简单的MapReduce范例代码. 顾名思义,它是用来计算文件里面每个单词出现的次数. 下面是他的代码,然后让我们来一起 reading the F**k">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"always"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> MapReduce 代码走读 | Big data及Hadoop分享 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-77178944-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?dc4072144e750437800dbc3aef534814";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Big data及Hadoop分享</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">HDFS MapReduce Spark</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                MapReduce 代码走读
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-03T08:49:04+08:00" content="2016-06-03">
+              2016-06-03
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/03/MapReduce-code-go-through/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/03/MapReduce-code-go-through/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+              &nbsp; | &nbsp;
+              <span class="page-pv"><i class="fa fa-file-o"></i>
+              <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+              </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>通过代码学习可能比看书更加适合广大攻城狮/程序猿们. 让我们来通过一个最常见的例子”WordCount”来看看,MapReduce常用的几个类如何使用以及之间的关系.</p>
+<h2 id="WordCount"><a href="#WordCount" class="headerlink" title="WordCount"></a>WordCount</h2><p>这个WordCount是Hadoop官方文档里面给的一个简单的MapReduce范例代码. 顾名思义,它是用来计算文件里面每个单词出现的次数. 下面是他的代码,然后让我们来一起 <del>reading the F**king source code</del> 学习学习.</p>
+<pre><code>package lyndon.my_mr;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.io.VIntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.fs.Path;
+
+
+public class MyWordCounter
+{
+    public static class MyWordCounterMapper extends Mapper&lt;LongWritable, Text, Text, VIntWritable&gt;
+    {
+        private final static VIntWritable one = new VIntWritable(1);
+        private Text word = new Text();
+
+        public void map(LongWritable key, Text value, Context context)
+                throws IOException, InterruptedException
+        {
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            while(itr.hasMoreTokens())
+            {
+                word.set(itr.nextToken());
+                context.write(word, one);
+            }
+        }
+    }
+
+    public static class MyWordCounterReducer extends Reducer&lt;Text, VIntWritable, Text, VIntWritable&gt;
+    {
+        private VIntWritable result = new VIntWritable();
+        public void reduce(Text key, Iterable&lt;VIntWritable&gt; values, Context context) 
+                throws IOException, InterruptedException
+        {
+            int sum = 0;
+            for(VIntWritable val : values)
+            {
+                sum += val.get();
+            }
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+
+    public static void main(String args[]) throws Exception
+    {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, &quot;my word counter&quot;);
+        job.setJarByClass(MyWordCounter.class);
+        job.setMapperClass(MyWordCounterMapper.class);
+        job.setReducerClass(MyWordCounterReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(VIntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+</code></pre><p>这段代码仔细看分为三部分:</p>
+<ol>
+<li>MyWordCounterMapper: Mapper类的实现</li>
+<li>MyWordCounterReducer: Reducer类的实现</li>
+<li>main()方法: 构造Job类的instance</li>
+</ol>
+<h2 id="Job类"><a href="#Job类" class="headerlink" title="Job类"></a>Job类</h2><p>在工作中,我们工程师的工作应该是集中于开发Mapper和Reducer. 但是处于学习和理解MapReduce的目的,我们先研究下Job.<br>通过上面的代码,我们可以看到Job的对象被设置了如下几项:</p>
+<ol>
+<li>Configuration 对象</li>
+<li>Mapper类</li>
+<li>Reducer类</li>
+<li>Output Key/Value 类型</li>
+<li>输入输出Path</li>
+</ol>
+<p>job.waitForCompletion()方法会submit job,然后等它执行结束.  那么问题来了,submit()方法干了啥?</p>
+<p>###Job类中submit()的实现:</p>
+<pre><code>public void submit() 
+       throws IOException, InterruptedException, ClassNotFoundException {
+  ensureState(JobState.DEFINE);
+  setUseNewAPI();
+  connect();
+  final JobSubmitter submitter = 
+      getJobSubmitter(cluster.getFileSystem(), cluster.getClient());
+  status = ugi.doAs(new PrivilegedExceptionAction&lt;JobStatus&gt;() {
+    public JobStatus run() throws IOException, InterruptedException, 
+    ClassNotFoundException {
+      return submitter.submitJobInternal(Job.this, cluster);
+    }
+  });
+  state = JobState.RUNNING;
+  LOG.info(&quot;The url to track the job: &quot; + getTrackingURL());
+ }
+</code></pre><p>由此可见, submit方法主要是构造了一个JobSubmitter类的instance然后调用 submitter.submitJobInternal()方法.  </p>
+<p>###JobSubmitter类中submitJobInternal()的实现：</p>
+<pre><code>JobStatus submitJobInternal(Job job, Cluster cluster) 
+throws ClassNotFoundException, InterruptedException, IOException {
+
+  //validate the jobs output specs 
+  checkSpecs(job);
+
+  Configuration conf = job.getConfiguration();
+  addMRFrameworkToDistributedCache(conf);
+
+  Path jobStagingArea = JobSubmissionFiles.getStagingDir(cluster, conf);
+  //configure the command line options correctly on the submitting dfs
+  InetAddress ip = InetAddress.getLocalHost();
+  if (ip != null) {
+    submitHostAddress = ip.getHostAddress();
+    submitHostName = ip.getHostName();
+    conf.set(MRJobConfig.JOB_SUBMITHOST,submitHostName);
+    conf.set(MRJobConfig.JOB_SUBMITHOSTADDR,submitHostAddress);
+  }
+  JobID jobId = submitClient.getNewJobID();
+  job.setJobID(jobId);
+  Path submitJobDir = new Path(jobStagingArea, jobId.toString());
+  JobStatus status = null;
+  try {
+    conf.set(MRJobConfig.USER_NAME,
+        UserGroupInformation.getCurrentUser().getShortUserName());
+    conf.set(&quot;hadoop.http.filter.initializers&quot;, 
+        &quot;org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer&quot;);
+    conf.set(MRJobConfig.MAPREDUCE_JOB_DIR, submitJobDir.toString());
+    LOG.debug(&quot;Configuring job &quot; + jobId + &quot; with &quot; + submitJobDir 
+        + &quot; as the submit dir&quot;);
+    // get delegation token for the dir
+    TokenCache.obtainTokensForNamenodes(job.getCredentials(),
+        new Path[] { submitJobDir }, conf);
+
+    populateTokenCache(conf, job.getCredentials());
+
+    // generate a secret to authenticate shuffle transfers
+    if (TokenCache.getShuffleSecretKey(job.getCredentials()) == null) {
+      KeyGenerator keyGen;
+      try {
+        keyGen = KeyGenerator.getInstance(SHUFFLE_KEYGEN_ALGORITHM);
+        keyGen.init(SHUFFLE_KEY_LENGTH);
+      } catch (NoSuchAlgorithmException e) {
+        throw new IOException(&quot;Error generating shuffle secret key&quot;, e);
+      }
+      SecretKey shuffleKey = keyGen.generateKey();
+      TokenCache.setShuffleSecretKey(shuffleKey.getEncoded(),
+          job.getCredentials());
+    }
+    if (CryptoUtils.isEncryptedSpillEnabled(conf)) {
+      conf.setInt(MRJobConfig.MR_AM_MAX_ATTEMPTS, 1);
+      LOG.warn(&quot;Max job attempts set to 1 since encrypted intermediate&quot; +
+              &quot;data spill is enabled&quot;);
+    }
+
+    copyAndConfigureFiles(job, submitJobDir);
+
+    Path submitJobFile = JobSubmissionFiles.getJobConfPath(submitJobDir);
+
+    // Create the splits for the job
+    LOG.debug(&quot;Creating splits at &quot; + jtFs.makeQualified(submitJobDir));
+    int maps = writeSplits(job, submitJobDir);
+    conf.setInt(MRJobConfig.NUM_MAPS, maps);
+    LOG.info(&quot;number of splits:&quot; + maps);
+
+    // write &quot;queue admins of the queue to which job is being submitted&quot;
+    // to job file.
+    String queue = conf.get(MRJobConfig.QUEUE_NAME,
+        JobConf.DEFAULT_QUEUE_NAME);
+    AccessControlList acl = submitClient.getQueueAdmins(queue);
+    conf.set(toFullPropertyName(queue,
+        QueueACL.ADMINISTER_JOBS.getAclName()), acl.getAclString());
+
+    // removing jobtoken referrals before copying the jobconf to HDFS
+    // as the tasks don&apos;t need this setting, actually they may break
+    // because of it if present as the referral will point to a
+    // different job.
+    TokenCache.cleanUpTokenReferral(conf);
+
+    if (conf.getBoolean(
+        MRJobConfig.JOB_TOKEN_TRACKING_IDS_ENABLED,
+        MRJobConfig.DEFAULT_JOB_TOKEN_TRACKING_IDS_ENABLED)) {
+      // Add HDFS tracking ids
+      ArrayList&lt;String&gt; trackingIds = new ArrayList&lt;String&gt;();
+      for (Token&lt;? extends TokenIdentifier&gt; t :
+          job.getCredentials().getAllTokens()) {
+        trackingIds.add(t.decodeIdentifier().getTrackingId());
+      }
+      conf.setStrings(MRJobConfig.JOB_TOKEN_TRACKING_IDS,
+          trackingIds.toArray(new String[trackingIds.size()]));
+    }
+
+    // Set reservation info if it exists
+    ReservationId reservationId = job.getReservationId();
+    if (reservationId != null) {
+      conf.set(MRJobConfig.RESERVATION_ID, reservationId.toString());
+    }
+
+    // Write job file to submit dir
+    writeConf(conf, submitJobFile);
+
+    //
+    // Now, actually submit the job (using the submit name)
+    //
+    printTokens(jobId, job.getCredentials());
+    status = submitClient.submitJob(
+        jobId, submitJobDir.toString(), job.getCredentials());
+    if (status != null) {
+      return status;
+    } else {
+      throw new IOException(&quot;Could not launch job&quot;);
+    }
+  } finally {
+    if (status == null) {
+      LOG.info(&quot;Cleaning up the staging area &quot; + submitJobDir);
+      if (jtFs != null &amp;&amp; submitJobDir != null)
+        jtFs.delete(submitJobDir, true);
+
+    }
+  }
+}
+</code></pre><p>这个方法的主要任务是：</p>
+<ol>
+<li>检查Input/Output的Spec</li>
+<li>为Job计算InputSplits</li>
+<li>把Jar文件和conf文件拷贝到HDFS的map-reduce系统目录</li>
+<li>向JobTracker提交job请求，然后监视job状态</li>
+</ol>
+<p>2#计算InputSplits是由FileInputFormat类中的getSplits()方法实现。下面是计算getSplits()方法的一段代码。 </p>
+<pre><code>if (isSplitable(job, path)) 
+{
+      long blockSize = file.getBlockSize();
+      long splitSize = computeSplitSize(blockSize, minSize, maxSize);
+
+      long bytesRemaining = length;
+      while (((double) bytesRemaining)/splitSize &gt; SPLIT_SLOP) {
+        int blkIndex = getBlockIndex(blkLocations, length-bytesRemaining);
+        splits.add(makeSplit(path, length-bytesRemaining, splitSize,
+                    blkLocations[blkIndex].getHosts(),
+                    blkLocations[blkIndex].getCachedHosts()));
+        bytesRemaining -= splitSize;
+      }
+
+      if (bytesRemaining != 0) {
+        int blkIndex = getBlockIndex(blkLocations, length-bytesRemaining);
+        splits.add(makeSplit(path, length-bytesRemaining, bytesRemaining,
+                   blkLocations[blkIndex].getHosts(),
+                   blkLocations[blkIndex].getCachedHosts()));
+      }
+    }
+</code></pre><p>3#JobTracker在本地文件系统有个系统目录，名字就叫做’jobTracker’. 每一个正在运行的job，都有两个文件在这个目录下：</p>
+<ul>
+<li>jobTracker/<jobid>.xml</jobid></li>
+<li>jobTracker/<jobid>.jar </jobid></li>
+</ul>
+<p>4#提交job请求，是由ClientProtocol类对象的submitJob()方法来实现的。 ClientProtocol是JobClient和中央JobTracker通信的协议。</p>
+<h1 id="Mapper-类"><a href="#Mapper-类" class="headerlink" title="Mapper 类"></a>Mapper 类</h1><p>Mapper的工作流程有run（）方法控制，用户可以override这个方法来定制特殊的workflow.</p>
+<pre><code>/**
+ * Expert users can override this method for more complete control over the
+ * execution of the Mapper.
+ * @param context
+ * @throws IOException
+ */
+public void run(Context context) throws IOException, InterruptedException {
+  setup(context);
+  try {
+    while (context.nextKeyValue()) {
+      map(context.getCurrentKey(), context.getCurrentValue(), context);
+    }
+  } finally {
+    cleanup(context);
+  }
+}
+</code></pre><p>Run（）方法先运行setup（）然后调用map（）方法处理每个context，最后执行cleanup（）<br>一般我们只需要实现自己的map（）方法，但是上面出现的四个方法，我们都可以override，取决于自己项目的需要。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MapReduce/" rel="tag">#MapReduce</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/11/YARN/" rel="next" title="YARN详细介绍">
+                <i class="fa fa-chevron-left"></i> YARN详细介绍
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/06/03/MapReduce-code-go-through/"
+           data-title="MapReduce 代码走读" data-url="http://www.hellospark.me/2016/06/03/MapReduce-code-go-through/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="Lyndon Zhang" />
+          <p class="site-author-name" itemprop="name">Lyndon Zhang</p>
+          <p class="site-description motion-element" itemprop="description">跟我一起学Hadoop 从零开始由浅入深</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1761587451/profile" target="_blank" title="weibo">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  weibo
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/dandanmylady" target="_blank" title="github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  github
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-block">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              Links
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://hadoop.apache.org" title="Hadoop" target="_blank">Hadoop</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://spark.apache.org" title="Spark" target="_blank">Spark</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://hellostack.me" title="HelloStack" target="_blank">HelloStack</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#WordCount"><span class="nav-number">2.</span> <span class="nav-text">WordCount</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Job类"><span class="nav-number">3.</span> <span class="nav-text">Job类</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Mapper-类"><span class="nav-number"></span> <span class="nav-text">Mapper 类</span></a></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lyndon Zhang</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+<div class="busuanzi-count">
+
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span>
+  
+
+  
+    <span class="site-pv"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span>
+  
+  
+</div>
+
+
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hellospark"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
