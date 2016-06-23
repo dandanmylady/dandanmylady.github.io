@@ -264,6 +264,177 @@
             
               
                 
+                <a class="post-title-link" href="/2016/06/23/scalar-notes/" itemprop="url">
+                  scalar 随手笔记
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-06-23T23:14:20+08:00" content="2016-06-23">
+              2016-06-23
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/06/23/scalar-notes/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/23/scalar-notes/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Scala-随手笔记"><a href="#Scala-随手笔记" class="headerlink" title="Scala 随手笔记"></a>Scala 随手笔记</h2><h3 id="Define-a-function"><a href="#Define-a-function" class="headerlink" title="Define a function"></a>Define a function</h3><pre><code>def isHeader(line: String): Boolean = {
+    line.contains(&quot;id_1&quot;)
+}
+</code></pre><ul>
+<li>Argument is line with type String</li>
+<li>Return type is “Boolean”.  </li>
+<li>Scalar is able to infer the return type itself. So it’s not neccessary to specify the return type. PS: it’s the best practice to specify the return type.</li>
+</ul>
+<h3 id="Define-an-anonymous-function"><a href="#Define-an-anonymous-function" class="headerlink" title="Define an anonymous function"></a>Define an anonymous function</h3><ul>
+<li>Use underscore(_) as aurgument to lambda<ul>
+<li><code>head.filter(!isHeader(_)).foreach(println)</code></li>
+</ul>
+</li>
+<li>Pass the argument explictly to lambda    <ul>
+<li><code>head.filter(x =&gt; !isHeader(x)).foreach(println)</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="pass-the-function-as-parameter"><a href="#pass-the-function-as-parameter" class="headerlink" title="pass the function as parameter"></a>pass the function as parameter</h3><p><code>head.foreach(println)</code><br>println is a function</p>
+<h3 id="define-variable"><a href="#define-variable" class="headerlink" title="define variable"></a>define variable</h3><ul>
+<li>Define a const varialbe<ul>
+<li><code>val rawblocks = sc.textFile(&quot;/mydata&quot;)</code></li>
+</ul>
+</li>
+<li>Define a non-const varialbe<ul>
+<li><code>var rawblocks = sc.textFiel(&quot;/mydata&quot;)</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="apply-method"><a href="#apply-method" class="headerlink" title="apply method"></a>apply method</h3><p>Scalar class can define apply() method to make a object acting like a function.  Just like overlaod the ()operator in C++.<br>Following 2 lines are the same:</p>
+<pre><code>head(5)
+head.apply(5)
+</code></pre><h3 id="tuple"><a href="#tuple" class="headerlink" title="tuple"></a>tuple</h3><pre><code>val tup=(id1, id2, scores, matched)
+tup._1
+tup._2
+tup.productElement(0)
+tup.productArity
+</code></pre><ul>
+<li>_1 is the first element, _2 the scecond one</li>
+<li>productElement(0) returns the first</li>
+<li>productArity returns the size</li>
+<li>Cannot access the element by tup(1)</li>
+</ul>
+<h3 id="case-classes"><a href="#case-classes" class="headerlink" title="case classes."></a>case classes.</h3><p>A case class is a simple type of immutable class that comes with implementations of all of the basic Java class methods, like toString, equals, and hashCode, which makes them very easy to use. Let’s declare a case class:</p>
+<pre><code>scala&gt; case class MatchData(id1: Int, id2: Int, scores: Array[Double], matched: Boolean)
+defined class MatchData
+
+scala&gt; def parse(line: String) = {
+ | val pieces = line.split(&quot;,&quot;)
+ | val id1 = pieces(0).toInt
+ | val id2 = pieces(1).toInt
+ | val scores = pieces.slice(2,11).map(toDouble)
+ | val matched = pieces(11).toBoolean
+ | MatchData(id1, id2, scores, matched)
+ | }
+parse: (line: String)MatchData
+
+scala&gt; val md = parse(line)
+md: MatchData = MatchData(36950,42116,[D@20361260,true)
+
+scala&gt; md.scores
+res26: Array[Double] = Array(1.0, NaN, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+
+scala&gt; md.id1
+res27: Int = 36950
+
+scala&gt; 
+</code></pre><ul>
+<li>No need to specify keyword “new” when creating an instance</li>
+<li>Class “MatchData” comes with a build-in “toString” implementation that works great for each member except the ‘scores’ Array.</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/06/03/MapReduce-code-go-through/" itemprop="url">
                   MapReduce 代码走读
                 </a>
@@ -1270,7 +1441,7 @@ public void run(Context context) throws IOException, InterruptedException {
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-count">7</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1280,7 +1451,7 @@ public void run(Context context) throws IOException, InterruptedException {
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
