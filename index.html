@@ -265,7 +265,7 @@
               
                 
                 <a class="post-title-link" href="/2016/06/23/scalar-notes/" itemprop="url">
-                  scalar 随手笔记
+                  Scala 语法杂记
                 </a>
               
             
@@ -315,13 +315,13 @@
       
         
           
-            <h2 id="Scala-随手笔记"><a href="#Scala-随手笔记" class="headerlink" title="Scala 随手笔记"></a>Scala 随手笔记</h2><h3 id="Define-a-function"><a href="#Define-a-function" class="headerlink" title="Define a function"></a>Define a function</h3><pre><code>def isHeader(line: String): Boolean = {
+            <h2 id="Scala-语法杂记"><a href="#Scala-语法杂记" class="headerlink" title="Scala 语法杂记"></a>Scala 语法杂记</h2><h3 id="Define-a-function"><a href="#Define-a-function" class="headerlink" title="Define a function"></a>Define a function</h3><pre><code>def isHeader(line: String): Boolean = {
     line.contains(&quot;id_1&quot;)
 }
 </code></pre><ul>
 <li>Argument is line with type String</li>
 <li>Return type is “Boolean”.  </li>
-<li>Scalar is able to infer the return type itself. So it’s not neccessary to specify the return type. PS: it’s the best practice to specify the return type.</li>
+<li>Scala is able to infer the return type itself. So it’s not neccessary to specify the return type. PS: it’s the best practice to specify the return type.</li>
 </ul>
 <h3 id="Define-an-anonymous-function"><a href="#Define-an-anonymous-function" class="headerlink" title="Define an anonymous function"></a>Define an anonymous function</h3><ul>
 <li>Use underscore(_) as aurgument to lambda<ul>
@@ -344,7 +344,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="apply-method"><a href="#apply-method" class="headerlink" title="apply method"></a>apply method</h3><p>Scalar class can define apply() method to make a object acting like a function.  Just like overlaod the ()operator in C++.<br>Following 2 lines are the same:</p>
+<h3 id="apply-method"><a href="#apply-method" class="headerlink" title="apply method"></a>apply method</h3><p>Scala class can define apply() method to make a object acting like a function.  Just like overlaod the ()operator in C++.<br>Following 2 lines are the same:</p>
 <pre><code>head(5)
 head.apply(5)
 </code></pre><h3 id="tuple"><a href="#tuple" class="headerlink" title="tuple"></a>tuple</h3><pre><code>val tup=(id1, id2, scores, matched)
